@@ -1,0 +1,91 @@
+{
+  "info": {
+    "name": "GolfBeta Backend",
+    "_postman_id": "c3e2e6d4-bf5a-41f8-9f77-9c7a4b4b7a10",
+    "description": "Local API for GolfBeta (Spring Boot + Firebase Auth + Postgres)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] }
+      }
+    },
+    {
+      "name": "Me (needs Bearer)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{idToken}}" }],
+        "url": { "raw": "{{baseUrl}}/me", "host": ["{{baseUrl}}"], "path": ["me"] }
+      }
+    },
+    {
+      "name": "Get Profile (needs Bearer)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{idToken}}" }],
+        "url": { "raw": "{{baseUrl}}/user/me", "host": ["{{baseUrl}}"], "path": ["user","me"] }
+      }
+    },
+    {
+      "name": "Patch Profile (partial)",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{idToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Toby\",\n  \"favouriteColour\": \"teal\",\n  \"skillLevel\": \"intermediate\",\n  \"improvementAreas\": [\"putting\",\"driver\"]\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/user/profile", "host": ["{{baseUrl}}"], "path": ["user","profile"] }
+      }
+    },
+    {
+      "name": "Put Profile (complete/no username -> auto-allocate)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{idToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"user@example.com\",\n  \"name\": \"Toby\",\n  \"dob\": \"1994-05-12\",\n  \"golfHandicap\": 8.2,\n  \"skillLevel\": \"intermediate\",\n  \"improvementAreas\": [\"putting\",\"driver\",\"course-management\"],\n  \"favouriteColour\": \"teal\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/user/profile", "host": ["{{baseUrl}}"], "path": ["user","profile"] }
+      }
+    },
+    {
+      "name": "Put Profile (explicit username)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{idToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"user@example.com\",\n  \"name\": \"Toby\",\n  \"dob\": \"1994-05-12\",\n  \"username\": \"toby00001\",\n  \"golfHandicap\": 8.2,\n  \"skillLevel\": \"intermediate\",\n  \"improvementAreas\": [\"putting\",\"driver\"],\n  \"favouriteColour\": \"teal\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/user/profile", "host": ["{{baseUrl}}"], "path": ["user","profile"] }
+      }
+    },
+    {
+      "name": "Delete Profile (GDPR)",
+      "request": {
+        "method": "DELETE",
+        "header": [{ "key": "Authorization", "value": "Bearer {{idToken}}" }],
+        "url": { "raw": "{{baseUrl}}/user/profile", "host": ["{{baseUrl}}"], "path": ["user","profile"] }
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "idToken", "value": "" }
+  ]
+}
