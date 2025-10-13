@@ -1,0 +1,5 @@
+# .gitignore (in this folder)
+.lambda_cache/
+lambda.zip
+.terraform/
+terraform.tfstate*

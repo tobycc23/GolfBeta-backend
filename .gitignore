@@ -36,3 +36,10 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### My private details
+/details
+
+### Terraform ###
+**/.terraform/*
+.idea/workspace.xml
