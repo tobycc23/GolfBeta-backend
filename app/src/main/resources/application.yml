@@ -13,6 +13,3 @@ spring:
       hibernate.jdbc.time_zone: UTC
   flyway:
     enabled: true
-
-firebase:
-  serviceAccountKey: "/Users/tobycc/Repos/golfbeta-backend/details/golfbeta-d29a7-firebase-adminsdk-fbsvc-379451e4d1.json"

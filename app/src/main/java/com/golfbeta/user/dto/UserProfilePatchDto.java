@@ -10,7 +10,7 @@ import java.util.List;
 public record UserProfilePatchDto(
         @Nullable String name,
         @Nullable LocalDate dob,
-        @Nullable @DecimalMax("54.0") @DecimalMin("0.0") Double golfHandicap,
+        @Nullable @DecimalMax("54.0") @DecimalMin("-1.0") Double golfHandicap,
         @Nullable Integer breakNumberTarget,
         @Nullable @Pattern(regexp="^(beginner|novice|intermediate|advanced|pro)$") String skillLevel,
         @Nullable List<String> improvementAreas,

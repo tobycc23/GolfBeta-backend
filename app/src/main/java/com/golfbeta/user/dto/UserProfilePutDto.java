@@ -12,5 +12,5 @@ public record UserProfilePutDto(
         @NotBlank String email,
         @NotBlank String name,
         @NotNull LocalDate dob,
-        @Nullable @DecimalMax("54.0") @DecimalMin("0.0") Double golfHandicap
+        @Nullable @DecimalMax("54.0") @DecimalMin("-1.0") Double golfHandicap
 ) {}

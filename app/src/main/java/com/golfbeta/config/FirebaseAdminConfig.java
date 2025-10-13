@@ -8,13 +8,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Base64;
 
 @Configuration
 public class FirebaseAdminConfig {
 
-    @Value("${firebase.serviceAccountKey}")
+    @Value("${FIREBASE_SERVICE_ACCOUNT_B64:}")
     private String serviceAccountKey;
 
     @Bean
@@ -28,9 +30,11 @@ public class FirebaseAdminConfig {
             return FirebaseApp.getInstance();
         }
 
-        FileInputStream serviceAccount = new FileInputStream(serviceAccountKey);
+        byte[] decodedBytes = Base64.getDecoder().decode(serviceAccountKey);
+        GoogleCredentials credentials = GoogleCredentials.fromStream(new ByteArrayInputStream(decodedBytes));
+
         FirebaseOptions options = new FirebaseOptions.Builder()
-                .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+                .setCredentials(credentials)
                 .build();
 
         return FirebaseApp.initializeApp(options);

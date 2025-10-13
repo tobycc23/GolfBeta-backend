@@ -3,7 +3,7 @@
 -- 1) Counter table: one row per base prefix (e.g., 'toby')
 CREATE TABLE IF NOT EXISTS username_counters (
   base_prefix TEXT PRIMARY KEY,
-  next_seq    INTEGER NOT NULL
+  curr_seq    INTEGER NOT NULL
 );
 
 -- 2) Ensure we still enforce uniqueness on user_profile.username

@@ -29,11 +29,11 @@ public class UsernameAllocator {
         // If row doesn't exist: start at 1, else increment.
         Integer seq = jdbc.queryForObject("""
       WITH upsert AS (
-        INSERT INTO username_counters (base_prefix, next_seq)
-        VALUES (?, 2)                    -- we will use 1 now, store 2 as next
+        INSERT INTO username_counters (base_prefix, curr_seq)
+        VALUES (?, 1)                    -- we will use 1 now, next will be 2
         ON CONFLICT (base_prefix)
-        DO UPDATE SET next_seq = username_counters.next_seq + 1
-        RETURNING CASE WHEN xmax = 0 THEN 1 ELSE (username_counters.next_seq) END AS allocated
+        DO UPDATE SET curr_seq = username_counters.curr_seq + 1
+        RETURNING CASE WHEN xmax = 0 THEN 1 ELSE (username_counters.curr_seq) END AS allocated
       )
       SELECT allocated FROM upsert
       """, Integer.class, base);
@@ -46,9 +46,9 @@ public class UsernameAllocator {
         while (existsUsername(candidate) && attempts < 3) {
             seq = jdbc.queryForObject("""
         UPDATE username_counters
-        SET next_seq = next_seq + 1
+        SET curr_seq = curr_seq + 1
         WHERE base_prefix = ?
-        RETURNING next_seq - 1
+        RETURNING curr_seq - 1
         """, Integer.class, base);
             candidate = base + String.format("%05d", seq);
             attempts++;

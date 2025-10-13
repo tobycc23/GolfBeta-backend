@@ -33,22 +33,22 @@ public class UserProfileService {
     public UserProfileViewDto patch(String uid, UserProfilePatchDto dto) {
         var p = repo.findById(uid).orElseGet(() -> seed(uid, null));
 
-        if (dto.name() != null) {
+        if(dto.name() != null) {
             p.setName(dto.name());
         }
-        if (dto.dob() != null) {
+        if(dto.dob() != null) {
             p.setDob(dto.dob());
         }
-        if (dto.golfHandicap() != null) {
+        if(dto.golfHandicap() != null) {
             p.setGolfHandicap(dto.golfHandicap());
         }
-        if (dto.breakNumberTarget() != null) {
+        if(dto.breakNumberTarget() != null) {
             p.setBreakNumberTarget(dto.breakNumberTarget());
         }
-        if (dto.skillLevel() != null) {
+        if(dto.skillLevel() != null) {
             p.setSkillLevel(dto.skillLevel());
         }
-        if (dto.improvementAreas() != null) {
+        if(dto.improvementAreas() != null) {
             p.setImprovementAreas(ImprovementAreas.filterNames(dto.improvementAreas()));
         }
 
@@ -97,7 +97,7 @@ public class UserProfileService {
     private UserProfile seed(String uid, String email) {
         var np = new UserProfile();
         np.setUserId(uid);
-        if (email != null) np.setEmail(email);
+        if(email != null) np.setEmail(email);
         np.setCreatedAt(Instant.now());
         np.setUpdatedAt(Instant.now());
         return np;
@@ -105,21 +105,21 @@ public class UserProfileService {
 
     private UserProfileStatusDto computeStatus(UserProfile p) {
         var missing = new ArrayList<String>();
-        if (nullOrBlank(p.getEmail())) missing.add("email");
-        if (nullOrBlank(p.getName())) missing.add("name");
-        if (p.getDob() == null) missing.add("dob");
-        if (nullOrBlank(p.getUsername())) missing.add("username");
-        if (nullOrBlank(p.getSkillLevel())) missing.add("skill_level");
+        if(nullOrBlank(p.getEmail())) missing.add("email");
+        if(nullOrBlank(p.getName())) missing.add("name");
+        if(p.getDob() == null) missing.add("dob");
+        if(nullOrBlank(p.getUsername())) missing.add("username");
+        if(nullOrBlank(p.getSkillLevel())) missing.add("skill_level");
 
         boolean completed = missing.isEmpty() && p.getProfileCompletedAt() != null;
         return new UserProfileStatusDto(completed, missing, Optional.ofNullable(p.getProfileVersion()).orElse(1));
     }
 
-    private boolean nullOrBlank(String s){ return s == null || s.isBlank(); }
+    private boolean nullOrBlank(String s) {
+        return s == null || s.isBlank();
+    }
 
-
-    private UserProfileViewDto toView(UserProfile p, UserProfileStatusDto status){
-
+    private UserProfileViewDto toView(UserProfile p, UserProfileStatusDto status) {
         return new UserProfileViewDto(
                 p.getUserId(), p.getEmail(), p.getName(), p.getDob(), p.getUsername(),
                 p.getGolfHandicap(), p.getBreakNumberTarget(), p.getSkillLevel(),
