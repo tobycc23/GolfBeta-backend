@@ -93,7 +93,7 @@ resource "aws_lambda_permission" "allow_sns" {
   source_arn    = aws_sns_topic.budget_actions.arn
 }
 
-# ===== £10 monthly cost budget with alerts and action trigger =====
+# ===== $10 monthly cost budget with alerts and action trigger =====
 resource "aws_budgets_budget" "monthly_cost" {
   name              = "${var.project}-monthly-gbp-cap"
   budget_type       = "COST"

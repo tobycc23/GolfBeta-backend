@@ -1,18 +1,20 @@
 terraform {
   required_version = ">= 1.6.0"
   required_providers {
-    aws    = { source = "hashicorp/aws",    version = "~> 5.0" }
-    random = { source = "hashicorp/random", version = "~> 3.6" }
+    aws     = { source = "hashicorp/aws", version = "~> 5.0" }
+    random  = { source = "hashicorp/random", version = "~> 3.6" }
+    archive = { source = "hashicorp/archive", version = "~> 2.5" }
   }
 }
 
 provider "aws" {
   region = var.aws_region
+  profile = "golfbeta"
 }
 
 locals {
   protect_tag = { "budget-protect" = "true" }
-  project_tag = { "Project"        = var.project }
+  project_tag = { "Project" = var.project }
   common_tags = merge(local.project_tag, local.protect_tag)
 }
 
@@ -46,8 +48,8 @@ resource "aws_subnet" "public_a" {
 
 # NEW: second public subnet in another AZ to dodge capacity issues for t4g.micro
 resource "aws_subnet" "public_b" {
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.10.2.0/24"
+  vpc_id     = aws_vpc.main.id
+  cidr_block = "10.10.2.0/24"
   # pick a different AZ from index 0; typically this is eu-north-1b
   availability_zone       = length(data.aws_availability_zones.azs.names) > 1 ? data.aws_availability_zones.azs.names[1] : data.aws_availability_zones.azs.names[0]
   map_public_ip_on_launch = true
@@ -115,8 +117,24 @@ resource "aws_security_group" "ec2_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["82.15.9.210/32"] # replace with your IP or remove if not needed
-    description = "SSH from your workstation"
+    cidr_blocks = ["185.59.125.202/32"] # replace with your IP or remove if not needed
+    description = "SSH from your workstation (1 Hamond Sq)"
+  }
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["82.132.234.136/32"] # replace with your IP or remove if not needed
+    description = "SSH from your workstation (Tobys iPhone (2))"
+  }
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["18.202.216.48/29"] # replace with your IP or remove if not needed
+    description = "SSH from eu-north-1 AWS internal"
   }
 
   egress {
@@ -176,8 +194,8 @@ resource "aws_db_subnet_group" "db_subnets" {
 resource "aws_db_instance" "pg" {
   identifier                 = "${var.project}-pg"
   engine                     = "postgres"
-  engine_version             = "16.3"
-  instance_class             = "db.t4g.micro"   # Free Tier eligible
+  engine_version             = "16.8"
+  instance_class             = "db.t4g.micro" # Free Tier eligible
   allocated_storage          = 20
   storage_type               = "gp2"
   db_name                    = "appdb"
@@ -194,14 +212,6 @@ resource "aws_db_instance" "pg" {
 }
 
 # ---------------- EC2 to run Docker Compose ----------------
-data "aws_ami" "al2023" {
-  owners      = ["137112412989"] # Amazon
-  most_recent = true
-  filter {
-    name   = "name"
-    values = ["al2023-ami-*-x86_64"]
-  }
-}
 
 data "aws_caller_identity" "me" {}
 
@@ -225,12 +235,12 @@ resource "aws_iam_policy" "ec2_policy" {
     Statement = [
       {
         Effect   = "Allow",
-        Action   = ["ssm:GetParameter","ssm:GetParameters"],
+        Action   = ["ssm:GetParameter", "ssm:GetParameters"],
         Resource = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.me.account_id}:parameter/${var.project}/*"
       },
       {
         Effect   = "Allow",
-        Action   = ["logs:CreateLogGroup","logs:CreateLogStream","logs:PutLogEvents"],
+        Action   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"],
         Resource = "*"
       }
     ]
@@ -254,8 +264,8 @@ resource "aws_iam_instance_profile" "ec2_profile" {
 }
 
 resource "aws_instance" "app" {
-  ami                         = data.aws_ami.al2023.id
-  instance_type               = "t3.micro"   # Free Tier eligible
+  ami           = var.ami_id
+  instance_type = "t3.micro" # Free Tier eligible
   # IMPORTANT: launch in the second public subnet (different AZ with capacity)
   subnet_id                   = aws_subnet.public_b.id
   vpc_security_group_ids      = [aws_security_group.ec2_sg.id]
@@ -275,23 +285,19 @@ resource "aws_instance" "app" {
     domain_name    = var.domain_name
     email_for_lets = var.email_for_lets
   })
-  
+
   user_data_replace_on_change = true
 
   tags = merge(local.common_tags, { Name = "${var.project}-ec2" })
 
   root_block_device {
-    volume_size           = 20    # or 30 if you want headroom
+    volume_size           = 20 # or 30 if you want headroom
     volume_type           = "gp3"
     delete_on_termination = true
   }
 }
 
 # ---------------- Outputs ----------------
-output "ec2_public_ip" {
-  value = aws_instance.app.public_ip
-}
-
 output "rds_endpoint" {
   value = aws_db_instance.pg.address
 }
