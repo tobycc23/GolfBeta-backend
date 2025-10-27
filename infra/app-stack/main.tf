@@ -117,7 +117,7 @@ resource "aws_security_group" "ec2_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["185.59.125.202/32"] # replace with your IP or remove if not needed
+    cidr_blocks = ["82.15.9.210/32"] # replace with your IP or remove if not needed
     description = "SSH from your workstation (1 Hamond Sq)"
   }
 
@@ -237,6 +237,21 @@ resource "aws_iam_policy" "ec2_policy" {
         Effect   = "Allow",
         Action   = ["ssm:GetParameter", "ssm:GetParameters"],
         Resource = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.me.account_id}:parameter/${var.project}/*"
+      },
+      {
+        Effect = "Allow",
+        Action = ["s3:GetObject"],
+        Resource = "arn:aws:s3:::golfbeta-eu-north-1-videos-39695a/videos/*"
+      },
+      {
+        Effect = "Allow",
+        Action = ["s3:ListBucket"],
+        Resource = "arn:aws:s3:::golfbeta-eu-north-1-videos-39695a",
+        Condition = {
+          StringLike = {
+            "s3:prefix" = ["videos/*"]
+          }
+        }
       },
       {
         Effect   = "Allow",

@@ -13,3 +13,9 @@ spring:
       hibernate.jdbc.time_zone: UTC
   flyway:
     enabled: true
+
+aws:
+  region: ${AWS_REGION:eu-north-1}
+  s3:
+    bucket: ${AWS_S3_BUCKET:golfbeta-eu-north-1-videos-39695a}
+    presign-duration-seconds: ${AWS_S3_PRESIGN_DURATION_SECONDS:300}

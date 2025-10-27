@@ -22,6 +22,7 @@
     <postgresql.version>42.7.8</postgresql.version>
     <flyway.version>11.13.2</flyway.version>
     <firebase.admin.version>9.7.0</firebase.admin.version>
+    <aws.sdk.version>2.25.69</aws.sdk.version>
   </properties>
 
   <dependencies>
@@ -111,6 +112,22 @@
       <artifactId>lombok</artifactId>
       <version>1.18.34</version>
       <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>s3</artifactId>
+      <version>${aws.sdk.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>sso</artifactId>
+      <version>${aws.sdk.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>ssooidc</artifactId>
+      <version>${aws.sdk.version}</version>
     </dependency>
   </dependencies>
 

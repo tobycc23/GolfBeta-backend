@@ -21,6 +21,7 @@ public class UserProfileService {
 
     private final UsernameAllocator allocator;
     private final UserProfileRepository repo;
+    private final UserSubscriptionRepository subscriptions;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
 
@@ -61,6 +62,7 @@ public class UserProfileService {
         p.setUpdatedAt(Instant.now());
         // if it was completed before and user removed data, we may recompute completion
         p = repo.save(p);
+        ensureSubscription(p);
 
         status = computeStatus(p);
         return toView(p, status);
@@ -83,6 +85,8 @@ public class UserProfileService {
             // likely username uniqueness violation
             throw new UsernameConflictException("Username already taken");
         }
+
+        ensureSubscription(p);
 
         var status = computeStatus(p);
         return toView(p, status);
@@ -128,5 +132,20 @@ public class UserProfileService {
                 Optional.ofNullable(p.getProfileVersion()).orElse(1),
                 status
         );
+    }
+
+    private void ensureSubscription(UserProfile profile) {
+        if (profile.getUserId() == null) {
+            return;
+        }
+
+        if (subscriptions.existsByUserProfileUserId(profile.getUserId())) {
+            return;
+        }
+
+        var subscription = new UserSubscription();
+        subscription.setUserProfile(profile);
+        subscription.setSubscribed(true);
+        subscriptions.save(subscription);
     }
 }
