@@ -2,16 +2,14 @@ package com.golfbeta.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.golfbeta.enums.ImprovementAreas;
-import com.golfbeta.user.dto.UserProfilePatchDto;
-import com.golfbeta.user.dto.UserProfilePutDto;
-import com.golfbeta.user.dto.UserProfileStatusDto;
-import com.golfbeta.user.dto.UserProfileViewDto;
+import com.golfbeta.user.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -148,4 +146,18 @@ public class UserProfileService {
         subscription.setSubscribed(true);
         subscriptions.save(subscription);
     }
+
+    public List<UserSearchResultDto> searchByName(String uid, String q, Integer limit) {
+        if (q == null || q.isBlank()) return List.of();
+        int lim = (limit == null) ? 20 : Math.max(1, Math.min(limit, 50));
+        var rows = repo.searchByNameFuzzy(q, uid, lim);
+        return rows.stream()
+                .map(r -> new UserSearchResultDto(
+                        (String) r[0],
+                        (String) r[1],
+                        (String) r[2]
+                ))
+                .toList();
+    }
+
 }

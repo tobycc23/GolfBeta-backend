@@ -1,5 +1,6 @@
 package com.golfbeta.practice;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -11,4 +12,5 @@ public interface PracticeHundredRepository extends JpaRepository<PracticeHundred
     List<PracticeHundred> findAllByUserIdOrderByStartedAtDesc(String userId);
     Optional<PracticeHundred> findFirstByUserIdAndCompletedAtIsNullOrderByStartedAtAsc(String userId);
     Optional<PracticeHundred> findFirstByUserIdAndCompletedAtIsNotNullOrderByCompletedAtDesc(String userId);
+    List<PracticeHundred> findByUserIdAndCompletedAtIsNotNull(String userId, Pageable pageable);
 }

@@ -37,6 +37,12 @@ public class PracticeHundredController {
         return service.list(uid);
     }
 
+    @GetMapping("/history")
+    public List<PracticeHundredResponseDto> history(@AuthenticationPrincipal String uid,
+                                                    @RequestParam(name = "limit", defaultValue = "20") int limit) {
+        return service.history(uid, limit);
+    }
+
     @GetMapping("/incomplete")
     public PracticeHundredResponseDto findIncomplete(@AuthenticationPrincipal String uid) {
         return service.findIncomplete(uid);
@@ -50,6 +56,11 @@ public class PracticeHundredController {
     @GetMapping("/analysis")
     public PracticeHundredAnalysisResponseDto analysis(@AuthenticationPrincipal String uid) {
         return service.analysis(uid);
+    }
+
+    @GetMapping("/{id}")
+    public PracticeHundredResponseDto findById(@AuthenticationPrincipal String uid, @PathVariable UUID id) {
+        return service.findById(uid, id);
     }
 
     @PatchMapping("/{id}")

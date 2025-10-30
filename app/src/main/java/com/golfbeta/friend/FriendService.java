@@ -1,0 +1,199 @@
+package com.golfbeta.friend;
+
+import com.golfbeta.enums.FriendStatus;
+import com.golfbeta.friend.dto.FriendListItemDto;
+import com.golfbeta.friend.dto.FriendViewDto;
+import com.golfbeta.user.UserProfile;
+import com.golfbeta.user.UserProfileRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.stereotype.Service;
+
+import java.time.Instant;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class FriendService {
+
+    private final FriendRepository repo;
+    private final UserProfileRepository userProfiles;
+
+    public FriendViewDto getRelationship(String uid, String other) {
+        var pair = canonical(uid, other);
+        var f = repo.findByUserIdAAndUserIdB(pair.a(), pair.b())
+                .orElseThrow(() -> new NoSuchElementException("No relationship found"));
+        if (!f.involves(uid)) throw new NoSuchElementException("No relationship found");
+        return toView(uid, f);
+    }
+
+    /**
+     * Send a request. If the opposite pending request already exists, auto-accept to FRIENDS.
+     * Idempotent if already requested by caller or already friends.
+     */
+    public FriendViewDto request(String requesterId, String other) {
+        ensureNotSelf(requesterId, other);
+        var pair = canonical(requesterId, other);
+
+        var existing = repo.findByUserIdAAndUserIdB(pair.a(), pair.b());
+        if (existing.isPresent()) {
+            var f = existing.get();
+            if (f.getStatus() == FriendStatus.FRIENDS) return toView(requesterId, f);
+            if (f.getRequesterId().equals(requesterId)) return toView(requesterId, f); // already requested by me
+            // opposite pending -> accept
+            f.setStatus(FriendStatus.FRIENDS);
+            f.setUpdatedAt(Instant.now());
+            return toView(requesterId, repo.save(f));
+        }
+
+        var f = new Friend();
+        f.setUserIdA(pair.a());
+        f.setUserIdB(pair.b());
+        f.setRequesterId(requesterId);
+        f.setStatus(FriendStatus.REQUESTED);
+        f.setCreatedAt(Instant.now());
+        f.setUpdatedAt(Instant.now());
+
+        try {
+            return toView(requesterId, repo.save(f));
+        } catch (DataIntegrityViolationException race) {
+            // If two requests happen at once, reload and re-evaluate
+            var reloaded = repo.findByUserIdAAndUserIdB(pair.a(), pair.b())
+                    .orElseThrow(() -> race);
+            if (reloaded.getStatus() == FriendStatus.REQUESTED && !reloaded.getRequesterId().equals(requesterId)) {
+                reloaded.setStatus(FriendStatus.FRIENDS);
+                reloaded.setUpdatedAt(Instant.now());
+                return toView(requesterId, repo.save(reloaded));
+            }
+            return toView(requesterId, reloaded);
+        }
+    }
+
+    /** Accept a received request. */
+    public FriendViewDto accept(String uid, String other) {
+        var f = loadPair(uid, other);
+        if (f.getStatus() == FriendStatus.FRIENDS) return toView(uid, f);
+        if (f.getRequesterId().equals(uid)) {
+            throw new IllegalStateException("You cannot accept a request you sent");
+        }
+        f.setStatus(FriendStatus.FRIENDS);
+        f.setUpdatedAt(Instant.now());
+        return toView(uid, repo.save(f));
+    }
+
+    /** Reject a received request. Deletes the row. */
+    public void reject(String uid, String other) {
+        var f = loadPair(uid, other);
+        if (f.getStatus() != FriendStatus.REQUESTED || f.getRequesterId().equals(uid)) {
+            throw new IllegalStateException("No incoming request to reject");
+        }
+        repo.delete(f);
+    }
+
+    /** Cancel a request you sent. Deletes the row. */
+    public void cancel(String uid, String other) {
+        var f = loadPair(uid, other);
+        if (f.getStatus() != FriendStatus.REQUESTED || !f.getRequesterId().equals(uid)) {
+            throw new IllegalStateException("No outgoing request to cancel");
+        }
+        repo.delete(f);
+    }
+
+    /** Unfriend (either side). Deletes the row. */
+    public void unfriend(String uid, String other) {
+        var f = loadPair(uid, other);
+        if (f.getStatus() != FriendStatus.FRIENDS) {
+            throw new IllegalStateException("Not friends");
+        }
+        repo.delete(f);
+    }
+
+    /** Friends only (no requests). */
+    public List<FriendListItemDto> listFriends(String uid) {
+        var rows = repo.findAllByUidAndStatus(uid, FriendStatus.FRIENDS);
+        return enrichWithProfiles(uid, rows);
+    }
+
+    /** Inbound requests only. */
+    public List<FriendListItemDto> listIncoming(String uid) {
+        var rows = repo.findAllByUidAndStatus(uid, FriendStatus.REQUESTED)
+                .stream().filter(f -> !f.getRequesterId().equals(uid)).toList();
+        return enrichWithProfiles(uid, rows);
+    }
+
+    /** Outbound requests only (useful for annotating search results on the client). */
+    public List<FriendListItemDto> listOutgoing(String uid) {
+        var rows = repo.findAllByUidAndStatus(uid, FriendStatus.REQUESTED)
+                .stream().filter(f -> f.getRequesterId().equals(uid)).toList();
+        return enrichWithProfiles(uid, rows);
+    }
+
+    // ---- helpers
+
+    private record Pair(String a, String b) {}
+    private Pair canonical(String u1, String u2) {
+        ensureNotSelf(u1, u2);
+        return (u1.compareTo(u2) < 0) ? new Pair(u1, u2) : new Pair(u2, u1);
+    }
+
+    private void ensureNotSelf(String u1, String u2) {
+        if (u1.equals(u2)) throw new IllegalArgumentException("Cannot friend yourself");
+    }
+
+    private Friend loadPair(String uid, String other) {
+        var pair = canonical(uid, other);
+        var f = repo.findByUserIdAAndUserIdB(pair.a(), pair.b())
+                .orElseThrow(() -> new NoSuchElementException("No relationship found"));
+        if (!f.involves(uid)) throw new NoSuchElementException("No relationship found");
+        return f;
+    }
+
+    private FriendViewDto toView(String viewerId, Friend f) {
+        var other = f.otherOf(viewerId);
+        var requestedByMe = viewerId.equals(f.getRequesterId());
+        return new FriendViewDto(
+                f.getId(),
+                f.getUserIdA(),
+                f.getUserIdB(),
+                other,
+                f.getStatus(),
+                f.getRequesterId(),
+                requestedByMe,
+                f.getCreatedAt(),
+                f.getUpdatedAt()
+        );
+    }
+
+    /**
+     * Batch-enrich a list of Friend rows with other user's name/username,
+     * avoiding N+1 queries.
+     */
+    private List<FriendListItemDto> enrichWithProfiles(String viewerId, List<Friend> rows) {
+        if (rows.isEmpty()) return List.of();
+
+        var otherIds = rows.stream()
+                .map(f -> f.otherOf(viewerId))
+                .collect(Collectors.toSet());
+
+        Map<String, UserProfile> byId = userProfiles.findAllById(otherIds)
+                .stream().collect(Collectors.toMap(UserProfile::getUserId, Function.identity()));
+
+        return rows.stream().map(f -> {
+            String otherId = f.otherOf(viewerId);
+            UserProfile p = byId.get(otherId);
+            String otherName = (p != null) ? p.getName() : null;
+            String otherUsername = (p != null) ? p.getUsername() : null;
+
+            return new FriendListItemDto(
+                    otherId,
+                    otherName,
+                    otherUsername,
+                    f.getStatus(),
+                    viewerId.equals(f.getRequesterId()),
+                    f.getCreatedAt()
+            );
+        }).toList();
+    }
+}

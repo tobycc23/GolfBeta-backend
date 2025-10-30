@@ -5,6 +5,9 @@ import com.golfbeta.practice.dto.PracticeHundredPatchDto;
 import com.golfbeta.practice.dto.PracticeHundredResponseDto;
 import com.golfbeta.practice.dto.PracticeHundredStatusDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -118,6 +121,21 @@ public class PracticeHundredService {
                 .stream()
                 .map(this::toDto)
                 .toList();
+    }
+
+    public List<PracticeHundredResponseDto> history(String userId, int limit) {
+        int sanitizedLimit = limit <= 0 ? 20 : Math.min(limit, 50);
+        Pageable pageable = PageRequest.of(0, sanitizedLimit, Sort.by(Sort.Direction.DESC, "completedAt"));
+        return repository.findByUserIdAndCompletedAtIsNotNull(userId, pageable)
+                .stream()
+                .map(this::toDto)
+                .toList();
+    }
+
+    public PracticeHundredResponseDto findById(String userId, UUID id) {
+        return repository.findByIdAndUserId(id, userId)
+                .map(this::toDto)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Practice hundred not found"));
     }
 
     public PracticeHundredResponseDto findIncomplete(String userId) {
