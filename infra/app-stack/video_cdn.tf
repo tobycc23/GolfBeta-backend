@@ -78,15 +78,15 @@ resource "aws_s3_bucket_policy" "videos" {
     Version = "2012-10-17",
     Statement = [
       {
-        Sid      = "DenyInsecureTransport",
-        Effect   = "Deny",
-        Principal= "*",
-        Action   = "s3:*",
+        Sid       = "DenyInsecureTransport",
+        Effect    = "Deny",
+        Principal = "*",
+        Action    = "s3:*",
         Resource = [
           aws_s3_bucket.videos.arn,
           "${aws_s3_bucket.videos.arn}/*"
         ],
-        Condition = { Bool = { "aws:SecureTransport": "false" } }
+        Condition = { Bool = { "aws:SecureTransport" : "false" } }
       }
       # No public allows. Access is via IAM (backend) and S3 pre-signed URLs.
     ]

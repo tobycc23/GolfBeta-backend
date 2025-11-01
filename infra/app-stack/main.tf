@@ -8,7 +8,7 @@ terraform {
 }
 
 provider "aws" {
-  region = var.aws_region
+  region  = var.aws_region
   profile = "golfbeta"
 }
 
@@ -117,7 +117,7 @@ resource "aws_security_group" "ec2_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["82.15.9.210/32"] # replace with your IP or remove if not needed
+    cidr_blocks = ["86.150.28.115/32"] # replace with your IP or remove if not needed
     description = "SSH from your workstation (1 Hamond Sq)"
   }
 
@@ -239,13 +239,13 @@ resource "aws_iam_policy" "ec2_policy" {
         Resource = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.me.account_id}:parameter/${var.project}/*"
       },
       {
-        Effect = "Allow",
-        Action = ["s3:GetObject"],
+        Effect   = "Allow",
+        Action   = ["s3:GetObject"],
         Resource = "arn:aws:s3:::golfbeta-eu-north-1-videos-39695a/videos/*"
       },
       {
-        Effect = "Allow",
-        Action = ["s3:ListBucket"],
+        Effect   = "Allow",
+        Action   = ["s3:ListBucket"],
         Resource = "arn:aws:s3:::golfbeta-eu-north-1-videos-39695a",
         Condition = {
           StringLike = {
@@ -268,6 +268,11 @@ resource "aws_iam_role_policy_attachment" "attach" {
   policy_arn = aws_iam_policy.ec2_policy.arn
 }
 
+resource "aws_iam_role_policy_attachment" "ec2_ssm_core" {
+  role       = aws_iam_role.ec2_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
 resource "aws_iam_role_policy_attachment" "ecr_readonly" {
   role       = aws_iam_role.ec2_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
@@ -286,6 +291,11 @@ resource "aws_instance" "app" {
   vpc_security_group_ids      = [aws_security_group.ec2_sg.id]
   iam_instance_profile        = aws_iam_instance_profile.ec2_profile.name
   associate_public_ip_address = true
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 2
+  }
 
   # Optional: only set a key if provided (lets you skip SSH)
   key_name = var.ssh_key_name != "" ? var.ssh_key_name : null

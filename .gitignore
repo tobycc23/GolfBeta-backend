@@ -43,3 +43,6 @@ build/
 ### Terraform ###
 **/.terraform/*
 .idea/workspace.xml
+
+### Keystore ###
+my-release-key.keystore
