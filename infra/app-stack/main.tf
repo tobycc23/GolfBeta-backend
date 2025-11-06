@@ -4,11 +4,18 @@ terraform {
     aws     = { source = "hashicorp/aws", version = "~> 5.0" }
     random  = { source = "hashicorp/random", version = "~> 3.6" }
     archive = { source = "hashicorp/archive", version = "~> 2.5" }
+    tls     = { source = "hashicorp/tls", version = "~> 4.0" }
   }
 }
 
 provider "aws" {
   region  = var.aws_region
+  profile = "golfbeta"
+}
+
+provider "aws" {
+  alias   = "us_east_1"
+  region  = "us-east-1"
   profile = "golfbeta"
 }
 
@@ -301,14 +308,19 @@ resource "aws_instance" "app" {
   key_name = var.ssh_key_name != "" ? var.ssh_key_name : null
 
   user_data = templatefile("${path.module}/user_data.sh", {
-    project        = var.project
-    region         = var.aws_region
-    rds_host       = aws_db_instance.pg.address
-    db_name        = "appdb"
-    db_user        = "appuser"
-    ecr_image      = var.ecr_image
-    domain_name    = var.domain_name
-    email_for_lets = var.email_for_lets
+    project                           = var.project
+    region                            = var.aws_region
+    rds_host                          = aws_db_instance.pg.address
+    db_name                           = "appdb"
+    db_user                           = "appuser"
+    ecr_image                         = var.ecr_image
+    domain_name                       = var.domain_name
+    email_for_lets                    = var.email_for_lets
+    video_bucket_name                 = aws_s3_bucket.videos.bucket
+    cloudfront_domain                 = aws_cloudfront_distribution.videos.domain_name
+    cloudfront_key_pair_parameter     = aws_ssm_parameter.cloudfront_key_pair_id.name
+    cloudfront_private_key_parameter  = aws_ssm_parameter.cloudfront_private_key_b64.name
+    cloudfront_signed_url_ttl_seconds = var.cloudfront_signed_url_ttl_seconds
   })
 
   user_data_replace_on_change = true

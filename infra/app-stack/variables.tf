@@ -48,3 +48,9 @@ variable "cors_allowed_origins" {
   type        = list(string)
   default     = ["http://localhost:19006"]
 }
+
+variable "cloudfront_signed_url_ttl_seconds" {
+  description = "How long CloudFront signed URLs remain valid"
+  type        = number
+  default     = 300
+}

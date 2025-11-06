@@ -80,9 +80,9 @@ echo
 ############################################
 echo "==> Encoding H.264 (1080x1920 vertical, ${FPS_ROUND}fps) -> $H264_OUT"
 
-# -vf "transpose=1,scale... for 90degrees clockwise transpose
+# -vf "transpose=1,scale... for 90degrees clockwise transpose (2 for anticlockwise)
 ffmpeg -y -i "$IN" \
-  -vf "transpose=2,fps=${FPS_ROUND},scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,setsar=1" \
+  -vf "transpose=1,fps=${FPS_ROUND},scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,setsar=1" \
   -r "$FPS_ROUND" -vsync cfr \
   -c:v libx264 -profile:v high -pix_fmt yuv420p \
   -preset slow -crf 20 \
@@ -97,9 +97,9 @@ ffmpeg -y -i "$IN" \
 ############################################
 echo "==> Encoding HEVC (1080x1920 vertical, ${FPS_ROUND}fps) -> $HEVC_OUT"
 
-# -vf "transpose=1,scale... for 90degrees clockwise transpose
+# -vf "transpose=1,scale... for 90degrees clockwise transpose (2 for anticlockwise)
 ffmpeg -y -i "$IN" \
-  -vf "transpose=2,fps=${FPS_ROUND},scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,setsar=1" \
+  -vf "transpose=1,fps=${FPS_ROUND},scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,setsar=1" \
   -r "$FPS_ROUND" -vsync cfr \
   -c:v libx265 -tag:v hvc1 -pix_fmt yuv420p \
   -preset slow -crf 25 \
