@@ -42,6 +42,8 @@ build/
 
 ### Terraform ###
 **/.terraform/*
+*.tfstate
+*.tfstate.*
 .idea/workspace.xml
 
 ### Keystore ###
