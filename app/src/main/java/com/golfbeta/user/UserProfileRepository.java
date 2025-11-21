@@ -26,4 +26,21 @@ public interface UserProfileRepository extends JpaRepository<UserProfile, String
     List<Object[]> searchByNameFuzzy(@Param("q") String query,
                                      @Param("excludeUid") String excludeUid,
                                      @Param("limit") int limit);
+
+    @Query(value = """
+        SELECT user_id, email, name
+        FROM user_profile
+        WHERE name IS NOT NULL
+          AND (
+               :q IS NULL
+            OR :q = ''
+            OR name ILIKE CONCAT('%', :q, '%')
+            OR similarity(name, :q) > 0.3
+          )
+        ORDER BY GREATEST(similarity(name, :q), word_similarity(name, :q)) DESC,
+                 name ASC
+        LIMIT :limit
+        """, nativeQuery = true)
+    List<Object[]> adminSearchByName(@Param("q") String query,
+                                     @Param("limit") int limit);
 }

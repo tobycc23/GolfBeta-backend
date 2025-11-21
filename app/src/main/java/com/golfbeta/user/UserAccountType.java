@@ -6,19 +6,20 @@ import lombok.Data;
 import java.util.UUID;
 
 @Entity
-@Table(name = "user_subscription")
+@Table(name = "user_account_types")
 @Data
-public class UserSubscription {
+public class UserAccountType {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @OneToOne(optional = false)
+    @OneToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "user_profile_id", nullable = false, unique = true)
     private UserProfile userProfile;
 
-    @Column(nullable = false)
-    private boolean subscribed = true;
-}
+    @ManyToOne(optional = false, fetch = FetchType.EAGER)
+    @JoinColumn(name = "account_type", nullable = false, referencedColumnName = "name")
+    private AccountType accountType;
 
+}

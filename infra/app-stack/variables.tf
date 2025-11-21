@@ -17,6 +17,15 @@ variable "firebase_service_account_b64" {
   type = string
 }
 
+variable "firebase_web_api_key" {
+  type = string
+}
+
+variable "security_admin_uids" {
+  description = "Comma-separated Firebase UIDs permitted to access admin APIs"
+  type        = string
+}
+
 variable "ssh_key_name" {
   type    = string
   default = "" # leave blank to skip SSH key attachment

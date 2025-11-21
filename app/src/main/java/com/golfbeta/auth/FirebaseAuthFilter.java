@@ -27,7 +27,8 @@ public class FirebaseAuthFilter extends OncePerRequestFilter {
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) return true; // CORS preflight
         // add any other public endpoints here:
         return path.equals("/health") || path.equals("/error")
-                || path.startsWith("/swagger-ui") || path.startsWith("/v3/api-docs");
+                || path.startsWith("/swagger-ui") || path.startsWith("/v3/api-docs")
+                || path.startsWith("/admin-console");
     }
 
     @Override

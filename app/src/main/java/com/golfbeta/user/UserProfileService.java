@@ -19,7 +19,8 @@ public class UserProfileService {
 
     private final UsernameAllocator allocator;
     private final UserProfileRepository repo;
-    private final UserSubscriptionRepository subscriptions;
+    private final UserAccountTypeRepository userAccountTypes;
+    private final AccountTypeRepository accountTypeRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
 
@@ -60,7 +61,7 @@ public class UserProfileService {
         p.setUpdatedAt(Instant.now());
         // if it was completed before and user removed data, we may recompute completion
         p = repo.save(p);
-        ensureSubscription(p);
+        ensureAccountType(p);
 
         status = computeStatus(p);
         return toView(p, status);
@@ -84,7 +85,7 @@ public class UserProfileService {
             throw new UsernameConflictException("Username already taken");
         }
 
-        ensureSubscription(p);
+        ensureAccountType(p);
 
         var status = computeStatus(p);
         return toView(p, status);
@@ -132,19 +133,22 @@ public class UserProfileService {
         );
     }
 
-    private void ensureSubscription(UserProfile profile) {
+    private void ensureAccountType(UserProfile profile) {
         if (profile.getUserId() == null) {
             return;
         }
 
-        if (subscriptions.existsByUserProfileUserId(profile.getUserId())) {
+        if (userAccountTypes.existsByUserProfileUserId(profile.getUserId())) {
             return;
         }
 
-        var subscription = new UserSubscription();
-        subscription.setUserProfile(profile);
-        subscription.setSubscribed(true);
-        subscriptions.save(subscription);
+        var userAccountType = new UserAccountType();
+        userAccountType.setUserProfile(profile);
+        AccountType defaultAccountType = accountTypeRepository.findById("tier_1")
+                .orElseGet(() -> accountTypeRepository.findById("tier_0")
+                        .orElseThrow(() -> new IllegalStateException("Default account types not seeded")));
+        userAccountType.setAccountType(defaultAccountType);
+        userAccountTypes.save(userAccountType);
     }
 
     public List<UserSearchResultDto> searchByName(String uid, String q, Integer limit) {

@@ -10,6 +10,8 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,6 +27,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import software.amazon.awssdk.services.cloudfront.CloudFrontUtilities;
+import software.amazon.awssdk.services.cloudfront.cookie.CookiesForCannedPolicy;
+import software.amazon.awssdk.services.cloudfront.cookie.CookiesForCustomPolicy;
 import software.amazon.awssdk.services.cloudfront.url.SignedUrl;
 
 @Component
@@ -75,6 +79,7 @@ public class CloudFrontSignedUrlService {
         String normalisedKey = objectKey.startsWith("/") ? objectKey.substring(1) : objectKey;
         String resourceUrl = "https://" + distributionDomain + "/" + normalisedKey;
         Instant expiresAt = Instant.now().plus(lifetime);
+        log.info("Signing {} with key pair {} expiring at {}", resourceUrl, keyPairId, expiresAt);
 
         SignedUrl signedUrl = utilities.getSignedUrlWithCannedPolicy(builder -> builder
                 .resourceUrl(resourceUrl)
@@ -84,6 +89,40 @@ public class CloudFrontSignedUrlService {
         );
 
         return signedUrl.url();
+    }
+
+    public Map<String, String> generateSignedCookies(String resourcePrefix, Duration lifetime) {
+        if (!StringUtils.hasText(resourcePrefix)) {
+            throw new IllegalArgumentException("resourcePrefix must not be blank");
+        }
+        if (lifetime.isNegative() || lifetime.isZero()) {
+            throw new IllegalArgumentException("lifetime must be positive");
+        }
+
+        String trimmed = resourcePrefix.startsWith("/") ? resourcePrefix.substring(1) : resourcePrefix;
+        String candidate = "https://" + distributionDomain + "/" + trimmed;
+        if (!candidate.endsWith("*")) {
+            if (!candidate.endsWith("/")) {
+                candidate = candidate + "/";
+            }
+            candidate = candidate + "*";
+        }
+        final String resourceUrl = candidate;
+
+        Instant expiresAt = Instant.now().plus(lifetime);
+        CookiesForCustomPolicy cookies = utilities.getCookiesForCustomPolicy(builder -> builder
+                .resourceUrl(resourceUrl)
+                .keyPairId(keyPairId)
+                .privateKey(privateKey)
+                .expirationDate(expiresAt)
+        );
+
+        Map<String, String> values = new LinkedHashMap<>();
+        values.put("CloudFront-Policy", cookies.policyHeaderValue());
+        values.put("CloudFront-Signature", cookies.signatureHeaderValue());
+        values.put("CloudFront-Key-Pair-Id", cookies.keyPairIdHeaderValue());
+        log.info("Generated signed cookies for {} expiring at {}", resourceUrl, expiresAt);
+        return values;
     }
 
     private static PrivateKey parsePrivateKey(String privateKeyBase64) {

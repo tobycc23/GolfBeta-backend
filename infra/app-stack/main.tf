@@ -191,6 +191,20 @@ resource "aws_ssm_parameter" "firebase_sa_b64" {
   tags  = local.common_tags
 }
 
+resource "aws_ssm_parameter" "firebase_web_api_key" {
+  name  = "/${var.project}/firebase/web_api_key"
+  type  = "SecureString"
+  value = var.firebase_web_api_key
+  tags  = local.common_tags
+}
+
+resource "aws_ssm_parameter" "admin_uids" {
+  name  = "/${var.project}/security/admin_uids"
+  type  = "SecureString"
+  value = var.security_admin_uids
+  tags  = local.common_tags
+}
+
 # ---------------- RDS PostgreSQL (Free Tier micro) ----------------
 resource "aws_db_subnet_group" "db_subnets" {
   name       = "${var.project}-db-subnets"
@@ -292,7 +306,7 @@ resource "aws_iam_instance_profile" "ec2_profile" {
 
 resource "aws_instance" "app" {
   ami           = var.ami_id
-  instance_type = "t3.micro" # Free Tier eligible
+  instance_type = "t3.small"
   # IMPORTANT: launch in the second public subnet (different AZ with capacity)
   subnet_id                   = aws_subnet.public_b.id
   vpc_security_group_ids      = [aws_security_group.ec2_sg.id]
@@ -321,6 +335,8 @@ resource "aws_instance" "app" {
     cloudfront_key_pair_parameter     = aws_ssm_parameter.cloudfront_key_pair_id.name
     cloudfront_private_key_parameter  = aws_ssm_parameter.cloudfront_private_key_b64.name
     cloudfront_signed_url_ttl_seconds = var.cloudfront_signed_url_ttl_seconds
+    firebase_web_api_key_parameter    = aws_ssm_parameter.firebase_web_api_key.name
+    admin_uids_parameter              = aws_ssm_parameter.admin_uids.name
   })
 
   user_data_replace_on_change = true

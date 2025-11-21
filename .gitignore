@@ -44,7 +44,12 @@ build/
 **/.terraform/*
 *.tfstate
 *.tfstate.*
+*.tfvars
+*.tfvars.json
 .idea/workspace.xml
 
 ### Keystore ###
 my-release-key.keystore
+
+### Video management scratch output ###
+infra/video-management/output/

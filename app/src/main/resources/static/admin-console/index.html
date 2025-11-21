@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Golfr Admin Console</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #55731f;
+        color: #afc9a4;
+        margin: 0;
+        padding: 24px;
+      }
+      h1, h2 {
+        margin-top: 32px;
+        color: #afc9a4;
+      }
+      section h2 {
+        color: #1a2b08;
+      }
+      section {
+        border: 1px solid #55731f;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        background: rgba(255, 255, 255, 0.9);
+        box-shadow: 0 10px 20px rgba(16, 33, 8, 0.12);
+        color: #102108;
+        overflow: hidden;
+      }
+      .collapsible-header {
+        width: 100%;
+        padding: 16px;
+        margin: 0;
+        background: transparent;
+        border: none;
+        border-bottom: 1px solid rgba(85, 115, 31, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 1.1rem;
+        color: #1a2b08;
+        cursor: pointer;
+      }
+      .collapsible-header span {
+        font-weight: bold;
+      }
+      .collapsible-content {
+        padding: 16px;
+        display: none;
+      }
+      section[data-expanded="true"] .collapsible-content {
+        display: block;
+      }
+      section[data-expanded="true"] .collapsible-header {
+        border-bottom: 1px solid rgba(85, 115, 31, 0.35);
+      }
+      .collapsible-icon {
+        font-size: 1.3rem;
+        transition: transform 0.15s ease;
+      }
+      section[data-expanded="true"] .collapsible-icon {
+        transform: rotate(90deg);
+      }
+      label {
+        display: block;
+        margin: 8px 0 4px;
+        font-weight: bold;
+        color: #2b4011;
+      }
+      input, textarea, select {
+        box-sizing: border-box;
+        width: 100%;
+        padding: 10px;
+        border-radius: 6px;
+        border: 1px solid #afc9a4;
+        background: #f4fbef;
+        color: #1f2f0c;
+        box-shadow: inset 0 1px 2px rgba(21, 34, 10, 0.12);
+      }
+      textarea {
+        min-height: 80px;
+      }
+      button {
+        margin-top: 12px;
+        padding: 11px 18px;
+        background: #55731f;
+        border: none;
+        border-radius: 6px;
+        color: #f5ffec;
+        cursor: pointer;
+        font-weight: bold;
+        letter-spacing: 0.3px;
+        box-shadow: 0 4px 12px rgba(16, 33, 8, 0.25);
+        transition: transform 0.1s ease, box-shadow 0.1s ease;
+      }
+      .log {
+        font-family: monospace;
+        background: #f8fff2;
+        color: #1d2f0b;
+        padding: 12px;
+        border-radius: 6px;
+        min-height: 100px;
+        border: 1px solid #afc9a4;
+        overflow-x: auto;
+      }
+      .search-results {
+        font-family: monospace;
+        background: #f8fff2;
+        color: #1d2f0b;
+        padding: 12px;
+        border-radius: 6px;
+        border: 1px solid #afc9a4;
+        min-height: 80px;
+        white-space: pre-wrap;
+      }
+      .flex {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+      .flex > div {
+        flex: 1;
+        min-width: 250px;
+      }
+      .logo {
+        display: block;
+        margin: 0 auto 16px;
+        max-width: 180px;
+      }
+      .auth-status {
+        margin-top: 8px;
+        color: #55731f;
+        font-size: 0.95rem;
+      }
+      .subsection {
+        margin-top: 18px;
+        padding-top: 48px;
+        border-top: 1px solid rgba(85, 115, 31, 0.15);
+      }
+      .subsection:first-of-type {
+        border-top: none;
+        padding-top: 0;
+      }
+      .subsection-title {
+        margin: 0 0 4px;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #1a2b08;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .subsection-description {
+        margin: 0 0 12px;
+        color: #4a6225;
+        font-size: 0.85rem;
+      }
+      .admin-access-banner {
+        display: none;
+        margin: 16px 0 24px;
+        padding: 16px;
+        border-radius: 12px;
+        background: rgba(16, 33, 8, 0.35);
+        color: #afc9a4;
+        border: 1px solid rgba(175, 201, 164, 0.4);
+        align-items: center;
+        gap: 12px;
+        justify-content: space-between;
+      }
+      .admin-access-banner button {
+        margin: 0;
+        background: transparent;
+        border: 1px solid #afc9a4;
+        color: #afc9a4;
+        box-shadow: none;
+      }
+      .token-toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        width: 320px;
+        background: rgba(15, 27, 6, 0.95);
+        border: 1px solid #afc9a4;
+        border-radius: 12px;
+        padding: 16px;
+        color: #e4f2d9;
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+        display: none;
+        z-index: 1000;
+      }
+      .token-toast header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+      }
+      .token-toast button {
+        margin: 0;
+        padding: 4px 8px;
+        border-radius: 4px;
+        color: #0f1b06;
+        background: #afc9a4;
+        border: none;
+        cursor: pointer;
+        font-size: 0.75rem;
+      }
+      .token-toast textarea {
+        margin-top: 8px;
+        width: 100%;
+        min-height: 90px;
+        font-family: monospace;
+        font-size: 0.8rem;
+        background: #101c09;
+        color: #e4f2d9;
+        border: 1px solid rgba(175, 201, 164, 0.4);
+        border-radius: 6px;
+        resize: none;
+      }
+      .action-toast {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        padding: 12px 18px;
+        border-radius: 10px;
+        background: rgba(24, 38, 12, 0.92);
+        border: 1px solid rgba(175, 201, 164, 0.4);
+        color: #e4f2d9;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
+        display: none;
+        max-width: 360px;
+        z-index: 900;
+      }
+      .action-toast--error {
+        background: rgba(185, 70, 61, 0.95);
+        border-color: rgba(255, 255, 255, 0.2);
+      }
+    </style>
+  </head>
+  <body>
+    <img src="golfr-logo.png" alt="Golfr logo" class="logo" />
+    <h1>Golfr Admin Console</h1>
+    <p>You need to create an account within the Golfr app (or Firebase directly) and have an existing admin add your UID to the admin list before you can use this console.</p>
+
+    <section id="signInSection" data-expanded="true">
+      <button class="collapsible-header" type="button">
+        <span>Sign In</span>
+        <span class="collapsible-icon">›</span>
+      </button>
+      <div class="collapsible-content">
+        <label for="adminEmail">Email</label>
+        <input id="adminEmail" type="email" placeholder="admin@example.com" />
+
+        <label for="adminPassword">Password</label>
+        <input id="adminPassword" type="password" />
+
+        <button id="fetchTokenBtn">Sign In</button>
+        <p id="authStatus" class="auth-status"></p>
+      </div>
+    </section>
+
+    <div id="adminAccessBanner" class="admin-access-banner">
+      <span id="adminAccessMessage">Admin access granted.</span>
+      <button id="signOutBtn" type="button">Sign Out</button>
+    </div>
+    <div id="tokenToast" class="token-toast">
+      <header>
+        <span>Firebase Admin Token</span>
+        <button type="button" id="copyTokenBtn">Copy</button>
+      </header>
+      <textarea id="tokenTextarea" readonly></textarea>
+      <button type="button" id="closeTokenBtn" style="margin-top:8px;">Hide</button>
+    </div>
+    <div id="actionToast" class="action-toast"></div>
+
+    <section data-auth-section data-expanded="false">
+      <button class="collapsible-header" type="button">
+        <span>Video Assets</span>
+        <span class="collapsible-icon">›</span>
+      </button>
+      <div class="collapsible-content">
+        <div class="subsection">
+          <p class="subsection-title">Register or Update Asset</p>
+          <p class="subsection-description">Paste the encoder output JSON to store key material for a `video_path`.</p>
+          <div class="flex">
+            <div>
+              <label for="videoPath">Video Path</label>
+              <input id="videoPath" type="text" placeholder="analysis/lesson-abc" />
+            </div>
+            <div>
+              <label for="keyVersion">Key Version</label>
+              <input id="keyVersion" type="number" min="1" value="1" />
+            </div>
+          </div>
+
+          <label for="keyHex">Key (hex)</label>
+          <input id="keyHex" type="text" placeholder="32 hex characters" />
+
+          <label for="keyBase64">Key (base64)</label>
+          <input id="keyBase64" type="text" placeholder="Base64 encoded key" />
+
+          <button id="registerAssetBtn">Register / Update Asset</button>
+        </div>
+
+        <div class="subsection">
+          <p class="subsection-title">Delete Asset</p>
+          <p class="subsection-description">Remove the stored key for a video path when rotating or retiring content.</p>
+          <label for="deleteVideoPath">Video Path</label>
+          <input id="deleteVideoPath" type="text" placeholder="analysis/lesson-abc" />
+          <button id="deleteAssetBtn">Delete Asset</button>
+        </div>
+
+        <div class="subsection">
+          <p class="subsection-title">Search Video Assets</p>
+          <p class="subsection-description">Fuzzy search by `video_path`. Results show database IDs so you can attach assets to groups.</p>
+          <label for="videoAssetSearchQuery">Video Path contains…</label>
+          <input id="videoAssetSearchQuery" type="text" placeholder="lesson" />
+          <button id="searchVideoAssetsBtn">Search</button>
+          <pre id="videoAssetSearchResults" class="search-results"></pre>
+        </div>
+      </div>
+    </section>
+
+    <section data-auth-section data-expanded="false">
+      <button class="collapsible-header" type="button">
+        <span>Video Groups</span>
+        <span class="collapsible-icon">›</span>
+      </button>
+      <div class="collapsible-content">
+        <div class="subsection">
+          <p class="subsection-title">Create Video Group</p>
+          <p class="subsection-description">
+            Creates a named group of video assets. Groups cannot be deleted; pick durable names.
+          </p>
+          <label for="videoGroupNameCreate">Video Group Name</label>
+          <input id="videoGroupNameCreate" type="text" placeholder="foundations_putting" />
+          <button id="createVideoGroupBtn">Create Video Group</button>
+        </div>
+
+        <div class="subsection">
+          <p class="subsection-title">Attach Video Asset</p>
+          <p class="subsection-description">
+            Adds a `video_asset` UUID to the selected group.
+          </p>
+          <div class="flex">
+            <div>
+              <label for="videoGroupIdAdd">Video Group ID (UUID)</label>
+              <input id="videoGroupIdAdd" type="text" placeholder="00000000-0000-0000-0000-000000000000" />
+            </div>
+            <div>
+              <label for="videoAssetIdAdd">Video Asset ID (UUID)</label>
+              <input id="videoAssetIdAdd" type="text" placeholder="11111111-1111-1111-1111-111111111111" />
+            </div>
+          </div>
+          <button id="addVideoAssetBtn">Add Video Asset</button>
+        </div>
+
+        <div class="subsection">
+          <p class="subsection-title">Remove Video Asset</p>
+          <p class="subsection-description">
+            Removes a `video_asset` UUID from the group. Key material remains untouched.
+          </p>
+          <div class="flex">
+            <div>
+              <label for="videoGroupIdRemove">Video Group ID (UUID)</label>
+              <input id="videoGroupIdRemove" type="text" placeholder="00000000-0000-0000-0000-000000000000" />
+            </div>
+            <div>
+              <label for="videoAssetIdRemove">Video Asset ID (UUID)</label>
+              <input id="videoAssetIdRemove" type="text" placeholder="11111111-1111-1111-1111-111111111111" />
+            </div>
+          </div>
+          <button id="removeVideoAssetBtn">Remove Video Asset</button>
+        </div>
+
+        <div class="subsection">
+          <p class="subsection-title">Search Video Groups</p>
+          <p class="subsection-description">Fuzzy search by group name and view all columns stored in `video_asset_groups`.</p>
+          <label for="videoGroupSearchQuery">Group Name contains…</label>
+          <input id="videoGroupSearchQuery" type="text" placeholder="foundations" />
+          <button id="searchVideoGroupsBtn">Search</button>
+          <pre id="videoGroupSearchResults" class="search-results"></pre>
+        </div>
+      </div>
+    </section>
+
+    <section data-auth-section data-expanded="false">
+      <button class="collapsible-header" type="button">
+        <span>Account Types</span>
+        <span class="collapsible-icon">›</span>
+      </button>
+      <div class="collapsible-content">
+        <div class="subsection">
+          <p class="subsection-title">Create Account Type</p>
+          <p class="subsection-description">
+            Adds a new account type backed by an empty video group list. Account types cannot be deleted from this console—choose names carefully.
+          </p>
+          <label for="accountTypeNameCreate">Account Type Name</label>
+          <input id="accountTypeNameCreate" type="text" placeholder="tier_2" />
+          <button id="createAccountTypeBtn">Create Account Type</button>
+        </div>
+
+        <div class="subsection">
+          <p class="subsection-title">Attach Video Group</p>
+          <p class="subsection-description">
+            Assign an existing <code>video_asset_group</code> ID to an account type’s allowed list. Admin-tier accounts (ALL access) cannot be scoped.
+          </p>
+          <div class="flex">
+            <div>
+              <label for="accountTypeNameAdd">Account Type Name</label>
+              <input id="accountTypeNameAdd" type="text" placeholder="tier_2" />
+            </div>
+            <div>
+              <label for="accountTypeGroupAdd">Video Group ID (UUID)</label>
+              <input id="accountTypeGroupAdd" type="text" placeholder="00000000-0000-0000-0000-000000000000" />
+            </div>
+          </div>
+          <button id="addVideoGroupBtn">Add Video Group ID</button>
+        </div>
+
+        <div class="subsection">
+          <p class="subsection-title">Remove Video Group</p>
+          <p class="subsection-description">
+            Detach a video group from an account type. This only affects derived access—per-video licenses remain untouched.
+          </p>
+          <div class="flex">
+            <div>
+              <label for="accountTypeNameRemove">Account Type Name</label>
+              <input id="accountTypeNameRemove" type="text" placeholder="tier_2" />
+            </div>
+            <div>
+              <label for="accountTypeGroupRemove">Video Group ID (UUID)</label>
+              <input id="accountTypeGroupRemove" type="text" placeholder="00000000-0000-0000-0000-000000000000" />
+            </div>
+          </div>
+          <button id="removeVideoGroupBtn">Remove Video Group ID</button>
+        </div>
+
+        <div class="subsection">
+          <p class="subsection-title">Search Account Types</p>
+          <p class="subsection-description">Lists every `account_type` row with its attached video groups.</p>
+          <button id="searchAccountTypesBtn">List Account Types</button>
+          <pre id="accountTypeSearchResults" class="search-results"></pre>
+        </div>
+      </div>
+    </section>
+
+    <section data-auth-section data-expanded="false">
+      <button class="collapsible-header" type="button">
+        <span>User Account Types</span>
+        <span class="collapsible-icon">›</span>
+      </button>
+      <div class="collapsible-content">
+        <div class="subsection">
+          <p class="subsection-title">Search Users</p>
+          <p class="subsection-description">
+            Fuzzy search by name to retrieve a user’s `user_id`, email, and display name before changing their account type.
+          </p>
+          <label for="userSearchQuery">Name contains…</label>
+          <input id="userSearchQuery" type="text" placeholder="alex" />
+          <button id="searchUsersBtn">Search Users</button>
+          <pre id="userSearchResults" class="search-results"></pre>
+        </div>
+
+        <div class="subsection">
+          <p class="subsection-title">Assign Account Type</p>
+          <p class="subsection-description">
+            Provide the `user_id` from the search results and the target account type (`tier_0`, `tier_1`, `tier_2`, `admin`, etc.).
+          </p>
+          <div class="flex">
+            <div>
+              <label for="userAccountTypeUserId">User ID</label>
+              <input id="userAccountTypeUserId" type="text" placeholder="firebase-uid" />
+            </div>
+            <div>
+              <label for="userAccountTypeName">Account Type</label>
+              <input id="userAccountTypeName" type="text" placeholder="tier_1" />
+            </div>
+          </div>
+          <button id="setUserAccountTypeBtn">Assign Account Type</button>
+        </div>
+
+        <div class="subsection">
+          <p class="subsection-title">Lookup User Account Type</p>
+          <p class="subsection-description">
+            Enter a `user_id` to see which account type the profile currently has.
+          </p>
+          <label for="userAccountTypeLookupUserId">User ID</label>
+          <input id="userAccountTypeLookupUserId" type="text" placeholder="firebase-uid" />
+          <button id="lookupUserAccountTypeBtn">Lookup</button>
+          <pre id="userAccountTypeLookupResult" class="search-results"></pre>
+        </div>
+      </div>
+    </section>
+
+    <section data-auth-section data-expanded="false">
+      <button class="collapsible-header" type="button">
+        <span>Video License Management</span>
+        <span class="collapsible-icon">›</span>
+      </button>
+      <div class="collapsible-content">
+        <div class="subsection">
+          <p class="subsection-title">Create or Update License</p>
+          <p class="subsection-description">Grant access to a Firebase user for a given video path, optionally setting status or expiry.</p>
+          <div class="flex">
+            <div>
+              <label for="licenseUserId">Firebase User ID</label>
+              <input id="licenseUserId" type="text" />
+            </div>
+            <div>
+              <label for="licenseVideoPath">Video Path</label>
+              <input id="licenseVideoPath" type="text" />
+            </div>
+          </div>
+
+          <label for="licenseStatus">License Status</label>
+          <select id="licenseStatus">
+            <option value="ACTIVE">ACTIVE</option>
+            <option value="SUSPENDED">SUSPENDED</option>
+            <option value="REVOKED">REVOKED</option>
+          </select>
+
+          <label for="licenseExpiry">Expires At (optional, ISO-8601)</label>
+          <input id="licenseExpiry" type="text" placeholder="2025-01-01T00:00:00Z" />
+
+          <button id="upsertLicenseBtn">Save License</button>
+        </div>
+
+        <div class="subsection">
+          <p class="subsection-title">Delete License</p>
+          <p class="subsection-description">Remove the per-user entitlement entirely.</p>
+          <label for="deleteLicenseUser">Firebase User ID</label>
+          <input id="deleteLicenseUser" type="text" />
+          <label for="deleteLicenseVideo">Video Path</label>
+          <input id="deleteLicenseVideo" type="text" />
+          <button id="deleteLicenseBtn">Delete License</button>
+        </div>
+      </div>
+    </section>
+
+    <section data-auth-section data-expanded="true">
+      <button class="collapsible-header" type="button">
+        <span>Logs</span>
+        <span class="collapsible-icon">›</span>
+      </button>
+      <div class="collapsible-content">
+        <div class="log" id="log"></div>
+      </div>
+    </section>
+
+    <script src="/admin-console/config.js"></script>
+    <script>
+      const consoleConfig = window.ADMIN_CONSOLE_CONFIG || {};
+      const logEl = document.getElementById('log');
+      const authSections = document.querySelectorAll('[data-auth-section]');
+      const authStatusEl = document.getElementById('authStatus');
+      const signInSection = document.getElementById('signInSection');
+      const adminBanner = document.getElementById('adminAccessBanner');
+      const adminBannerMessage = document.getElementById('adminAccessMessage');
+      const signOutBtn = document.getElementById('signOutBtn');
+      const collapsibleSections = document.querySelectorAll('section[data-expanded]');
+      const tokenToast = document.getElementById('tokenToast');
+      const tokenTextarea = document.getElementById('tokenTextarea');
+      const copyTokenBtn = document.getElementById('copyTokenBtn');
+      const closeTokenBtn = document.getElementById('closeTokenBtn');
+      const actionToast = document.getElementById('actionToast');
+      const SESSION_STORAGE_KEY = 'golfbetaAdminConsoleSession';
+      let cachedToken = '';
+      let cachedUid = '';
+      let actionToastTimeoutId = 0;
+
+      function renderJsonResult(elementId, data) {
+        const target = document.getElementById(elementId);
+        if (!target) return;
+        if (data === undefined || data === null || (Array.isArray(data) && data.length === 0)) {
+          target.textContent = 'No results.';
+          return;
+        }
+        target.textContent = JSON.stringify(data, null, 2);
+      }
+
+      function setAuthSectionsVisible(isVisible) {
+        authSections.forEach((section) => {
+          section.style.display = isVisible ? 'block' : 'none';
+        });
+      }
+      setAuthSectionsVisible(false);
+
+      function bindCollapsibleSections() {
+        collapsibleSections.forEach((section) => {
+          const header = section.querySelector('.collapsible-header');
+          if (!header) return;
+          header.addEventListener('click', () => {
+            const isExpanded = section.getAttribute('data-expanded') === 'true';
+            section.setAttribute('data-expanded', isExpanded ? 'false' : 'true');
+          });
+        });
+      }
+      bindCollapsibleSections();
+
+      function setSectionExpanded(section, expanded) {
+        if (section) {
+          section.setAttribute('data-expanded', expanded ? 'true' : 'false');
+        }
+      }
+
+      function showAdminBanner(uid) {
+        if (adminBannerMessage) {
+          adminBannerMessage.textContent = `Admin access granted for ${uid}`;
+        }
+        if (adminBanner) {
+          adminBanner.style.display = 'flex';
+        }
+        if (signInSection) {
+          signInSection.style.display = 'none';
+          setSectionExpanded(signInSection, false);
+        }
+        showTokenToast(getToken());
+      }
+
+      function hideAdminBanner() {
+        if (adminBanner) {
+          adminBanner.style.display = 'none';
+        }
+        hideTokenToast();
+      }
+
+      function showSignInSection(message = '') {
+      if (signInSection) {
+        signInSection.style.display = 'block';
+        setSectionExpanded(signInSection, true);
+      }
+      hideTokenToast();
+      if (authStatusEl) {
+        authStatusEl.textContent = message;
+        authStatusEl.style.color = '#55731f';
+      }
+    }
+
+      function persistSession(token, uid, expiresInSeconds = 3600) {
+        try {
+          const expiresInMs = Number(expiresInSeconds) > 0
+            ? Number(expiresInSeconds) * 1000
+            : 55 * 60 * 1000;
+          const payload = {
+            token,
+            uid,
+            expiresAt: Date.now() + expiresInMs,
+          };
+          localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(payload));
+        } catch (_error) {
+          // ignore storage failures
+        }
+      }
+
+      function clearPersistedSession() {
+        try {
+          localStorage.removeItem(SESSION_STORAGE_KEY);
+        } catch (_error) {
+          // ignore
+        }
+      }
+
+      function restorePersistedSession() {
+        try {
+          const raw = localStorage.getItem(SESSION_STORAGE_KEY);
+          if (!raw) return false;
+          const parsed = JSON.parse(raw);
+          if (!parsed?.token || !parsed?.uid || !parsed?.expiresAt) {
+            clearPersistedSession();
+            return false;
+          }
+          if (Date.now() >= parsed.expiresAt) {
+            clearPersistedSession();
+            return false;
+          }
+          cachedToken = parsed.token;
+          cachedUid = parsed.uid;
+          log(`Found existing admin session for ${parsed.uid}. Verifying access...`);
+          verifyAdminAccess(false);
+          return true;
+        } catch (_error) {
+          clearPersistedSession();
+          return false;
+        }
+      }
+
+      function log(message, isError = false) {
+        const time = new Date().toISOString();
+        const line = document.createElement('div');
+        line.textContent = `[${time}] ${message}`;
+        line.style.color = isError ? '#b9463d' : '#365714';
+        logEl.prepend(line);
+      }
+
+      async function fetchJson(url, options = {}) {
+        const response = await fetch(url, options);
+        const text = await response.text();
+        let json;
+        try {
+          json = text ? JSON.parse(text) : null;
+        } catch (e) {
+          json = text;
+        }
+        if (!response.ok) {
+          const message = typeof json === 'string' && json ? json : JSON.stringify(json || {});
+          const error = new Error(message || `Request failed with status ${response.status}`);
+          error.status = response.status;
+          error.responseBody = json;
+          throw error;
+        }
+        return json;
+      }
+
+      function getToken() {
+        const token = cachedToken;
+        if (!token) throw new Error('Sign in with your Firebase admin account first.');
+        return token;
+      }
+
+      function setAuthenticatedState(token, uid, expiresInSeconds = 3600) {
+        cachedToken = token;
+        cachedUid = uid;
+        persistSession(token, uid, expiresInSeconds);
+        setAuthSectionsVisible(false);
+        hideAdminBanner();
+        if (signInSection) {
+          signInSection.style.display = 'block';
+        }
+        if (authStatusEl) {
+          authStatusEl.textContent = `Signed in as ${uid}. Verifying admin access...`;
+          authStatusEl.style.color = '#55731f';
+        }
+        log(`Authenticated as Firebase UID ${uid}`);
+        verifyAdminAccess(true);
+      }
+
+      function showTokenToast(token) {
+        if (!tokenToast || !tokenTextarea || !token) return;
+        tokenTextarea.value = token;
+        tokenToast.style.display = 'block';
+      }
+
+      function hideTokenToast() {
+        if (tokenToast) {
+          tokenToast.style.display = 'none';
+        }
+      }
+
+      function showActionToast(message, isError = false) {
+        if (!actionToast || !message) return;
+        actionToast.textContent = message;
+        actionToast.classList.toggle('action-toast--error', Boolean(isError));
+        actionToast.style.display = 'block';
+        if (actionToastTimeoutId) {
+          clearTimeout(actionToastTimeoutId);
+        }
+        actionToastTimeoutId = window.setTimeout(() => {
+          hideActionToast();
+        }, 4000);
+      }
+
+      function hideActionToast() {
+        if (actionToast) {
+          actionToast.style.display = 'none';
+        }
+      }
+
+      async function verifyAdminAccess(recordLogin = false) {
+        try {
+          const queryParam = recordLogin ? '?recordLogin=true' : '';
+          const session = await fetchJson(`/admin/session${queryParam}`, {
+            method: 'GET',
+            headers: { Authorization: `Bearer ${getToken()}` },
+          });
+          setAuthSectionsVisible(true);
+          const sessionUid = session && session.uid ? session.uid : cachedUid;
+          showAdminBanner(sessionUid);
+          if (authStatusEl) {
+            authStatusEl.textContent = '';
+          }
+          log(`Admin access confirmed for UID ${sessionUid}`);
+        } catch (error) {
+          setAuthSectionsVisible(false);
+          hideAdminBanner();
+          const isForbidden = error && typeof error.message === 'string'
+            && error.message.includes('Admin privileges required');
+          const notAdminMessage = isForbidden
+            ? 'You do not have admin access. Please ask an existing admin to add your UID.'
+            : 'Unable to verify admin access.';
+          showSignInSection(notAdminMessage);
+          if (authStatusEl) {
+            authStatusEl.style.color = '#b9463d';
+          }
+          clearPersistedSession();
+          log(`Admin access denied: ${error.message}`, true);
+        }
+      }
+
+      document.getElementById('fetchTokenBtn').addEventListener('click', async () => {
+        const apiKey = consoleConfig.firebaseWebApiKey;
+        if (!apiKey) {
+          log('Firebase Web API key is not configured on the server.', true);
+          return;
+        }
+        const email = document.getElementById('adminEmail').value.trim();
+        const password = document.getElementById('adminPassword').value;
+        if (!apiKey || !email || !password) {
+          log('API key, email, and password are required.', true);
+          return;
+        }
+        try {
+          const payload = await fetchJson(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${encodeURIComponent(apiKey)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email,
+              password,
+              returnSecureToken: true,
+            }),
+          });
+          if (payload.idToken && payload.localId) {
+            setAuthenticatedState(payload.idToken, payload.localId, payload.expiresIn);
+          } else {
+            throw new Error('Firebase response missing idToken/localId.');
+          }
+        } catch (error) {
+          log(`Failed to fetch token: ${error.message}`, true);
+          if (authStatusEl) {
+            authStatusEl.textContent = humanReadableAuthError(error.message);
+            authStatusEl.style.color = '#b9463d';
+          }
+        }
+      });
+
+      if (signOutBtn) {
+        signOutBtn.addEventListener('click', () => {
+          cachedToken = '';
+          cachedUid = '';
+          hideAdminBanner();
+          setAuthSectionsVisible(false);
+          showSignInSection('You have signed out.');
+          clearPersistedSession();
+          log('Signed out of admin console');
+        });
+      }
+
+      restorePersistedSession();
+
+      if (copyTokenBtn && tokenTextarea) {
+        copyTokenBtn.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(tokenTextarea.value);
+            log('Admin token copied to clipboard');
+          } catch (err) {
+            log(`Failed to copy token: ${err.message}`, true);
+          }
+        });
+      }
+      if (closeTokenBtn) {
+        closeTokenBtn.addEventListener('click', hideTokenToast);
+      }
+
+      function humanReadableAuthError(rawMessage) {
+        let code = rawMessage;
+        try {
+          const parsed = JSON.parse(rawMessage);
+          code = parsed?.error?.message || rawMessage;
+        } catch (_) {
+          // raw string, ignore
+        }
+        switch (code) {
+          case 'EMAIL_NOT_FOUND':
+            return 'No account found for that email.';
+          case 'INVALID_PASSWORD':
+            return 'Incorrect password.';
+          case 'USER_DISABLED':
+            return 'This account is disabled.';
+          default:
+            return 'Failed to sign in. Please check your credentials and try again.';
+        }
+      }
+
+      document.getElementById('createAccountTypeBtn').addEventListener('click', async () => {
+        const token = getToken();
+        const name = document.getElementById('accountTypeNameCreate').value.trim();
+        if (!name) {
+          log('Account type name is required.', true);
+          return;
+        }
+        try {
+          const response = await fetchJson('/admin/account-types', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ name }),
+          });
+          log(`Created account type ${response.name}`);
+          showActionToast(`Created account type ${response.name}`);
+        } catch (error) {
+          log(`Failed to create account type: ${error.message}`, true);
+          showActionToast(`Failed to create account type: ${error.message}`, true);
+        }
+      });
+
+      document.getElementById('addVideoGroupBtn').addEventListener('click', async () => {
+        const token = getToken();
+        const name = document.getElementById('accountTypeNameAdd').value.trim();
+        const groupId = document.getElementById('accountTypeGroupAdd').value.trim();
+        if (!name || !groupId) {
+          log('Both account type name and video group ID are required.', true);
+          return;
+        }
+        try {
+          const response = await fetchJson(`/admin/account-types/${encodeURIComponent(name)}/video-groups`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ videoGroupId: groupId }),
+          });
+          log(`Added group ${groupId} to ${response.name}`);
+          showActionToast(`Added group ${groupId} to ${response.name}`);
+        } catch (error) {
+          log(`Failed to add video group: ${error.message}`, true);
+          showActionToast(`Failed to add video group: ${error.message}`, true);
+        }
+      });
+
+      document.getElementById('removeVideoGroupBtn').addEventListener('click', async () => {
+        const token = getToken();
+        const name = document.getElementById('accountTypeNameRemove').value.trim();
+        const groupId = document.getElementById('accountTypeGroupRemove').value.trim();
+        if (!name || !groupId) {
+          log('Both account type name and video group ID are required.', true);
+          return;
+        }
+        try {
+          const response = await fetchJson(`/admin/account-types/${encodeURIComponent(name)}/video-groups/${encodeURIComponent(groupId)}`, {
+            method: 'DELETE',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          log(`Removed group ${groupId} from ${response.name}`);
+          showActionToast(`Removed group ${groupId} from ${response.name}`);
+        } catch (error) {
+          log(`Failed to remove video group: ${error.message}`, true);
+          showActionToast(`Failed to remove video group: ${error.message}`, true);
+        }
+      });
+
+      document.getElementById('createVideoGroupBtn').addEventListener('click', async () => {
+        const token = getToken();
+        const name = document.getElementById('videoGroupNameCreate').value.trim();
+        if (!name) {
+          log('Video group name is required.', true);
+          return;
+        }
+        try {
+          const response = await fetchJson('/admin/video-groups', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ name }),
+          });
+          log(`Created video group ${response.name} (${response.id})`);
+          showActionToast(`Created video group ${response.name}`);
+        } catch (error) {
+          log(`Failed to create video group: ${error.message}`, true);
+          showActionToast(`Failed to create video group: ${error.message}`, true);
+        }
+      });
+
+      document.getElementById('addVideoAssetBtn').addEventListener('click', async () => {
+        const token = getToken();
+        const groupId = document.getElementById('videoGroupIdAdd').value.trim();
+        const assetId = document.getElementById('videoAssetIdAdd').value.trim();
+        if (!groupId || !assetId) {
+          log('Group ID and video asset ID are required.', true);
+          return;
+        }
+        try {
+          const response = await fetchJson(`/admin/video-groups/${encodeURIComponent(groupId)}/assets`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ videoAssetId: assetId }),
+          });
+          log(`Added asset ${assetId} to group ${response.id}`);
+          showActionToast(`Added asset ${assetId}`);
+        } catch (error) {
+          log(`Failed to add asset to group: ${error.message}`, true);
+          showActionToast(`Failed to add asset: ${error.message}`, true);
+        }
+      });
+
+      document.getElementById('removeVideoAssetBtn').addEventListener('click', async () => {
+        const token = getToken();
+        const groupId = document.getElementById('videoGroupIdRemove').value.trim();
+        const assetId = document.getElementById('videoAssetIdRemove').value.trim();
+        if (!groupId || !assetId) {
+          log('Group ID and video asset ID are required.', true);
+          return;
+        }
+        try {
+          const response = await fetchJson(`/admin/video-groups/${encodeURIComponent(groupId)}/assets/${encodeURIComponent(assetId)}`, {
+            method: 'DELETE',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          log(`Removed asset ${assetId} from group ${response.id}`);
+          showActionToast(`Removed asset ${assetId}`);
+        } catch (error) {
+          log(`Failed to remove asset from group: ${error.message}`, true);
+          showActionToast(`Failed to remove asset: ${error.message}`, true);
+        }
+      });
+
+      document.getElementById('searchVideoAssetsBtn').addEventListener('click', async () => {
+        const token = getToken();
+        const query = document.getElementById('videoAssetSearchQuery').value.trim();
+        try {
+          const response = await fetchJson(`/admin/video-assets/search?query=${encodeURIComponent(query)}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          log(`Fetched ${response.length} video assets for query "${query}"`);
+          renderJsonResult('videoAssetSearchResults', response);
+        } catch (error) {
+          log(`Failed to search video assets: ${error.message}`, true);
+          showActionToast(`Failed to search video assets: ${error.message}`, true);
+        }
+      });
+
+      document.getElementById('searchVideoGroupsBtn').addEventListener('click', async () => {
+        const token = getToken();
+        const query = document.getElementById('videoGroupSearchQuery').value.trim();
+        try {
+          const response = await fetchJson(`/admin/video-groups/search?query=${encodeURIComponent(query)}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          log(`Fetched ${response.length} video groups for query "${query}"`);
+          renderJsonResult('videoGroupSearchResults', response);
+        } catch (error) {
+          log(`Failed to search video groups: ${error.message}`, true);
+          showActionToast(`Failed to search video groups: ${error.message}`, true);
+        }
+      });
+
+      document.getElementById('searchAccountTypesBtn').addEventListener('click', async () => {
+        const token = getToken();
+        try {
+          const response = await fetchJson('/admin/account-types', {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          log(`Fetched ${response.length} account types`);
+          renderJsonResult('accountTypeSearchResults', response);
+        } catch (error) {
+          log(`Failed to list account types: ${error.message}`, true);
+          showActionToast(`Failed to list account types: ${error.message}`, true);
+        }
+      });
+
+      document.getElementById('searchUsersBtn').addEventListener('click', async () => {
+        const token = getToken();
+        const query = document.getElementById('userSearchQuery').value.trim();
+        try {
+          const response = await fetchJson(`/admin/user-profiles/search?query=${encodeURIComponent(query)}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          log(`Fetched ${response.length} users for query "${query}"`);
+          renderJsonResult('userSearchResults', response);
+        } catch (error) {
+          log(`Failed to search users: ${error.message}`, true);
+          showActionToast(`Failed to search users: ${error.message}`, true);
+        }
+      });
+
+      document.getElementById('setUserAccountTypeBtn').addEventListener('click', async () => {
+        const token = getToken();
+        const userId = document.getElementById('userAccountTypeUserId').value.trim();
+        const accountType = document.getElementById('userAccountTypeName').value.trim();
+        if (!userId || !accountType) {
+          log('Both user ID and account type are required.', true);
+          return;
+        }
+        try {
+          const response = await fetchJson('/admin/user-account-types', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ userId, accountType }),
+          });
+          log(`Set account type for user ${response.userId} → ${response.accountType}`);
+          showActionToast(`Updated ${response.userId} to ${response.accountType}`);
+        } catch (error) {
+          log(`Failed to set user account type: ${error.message}`, true);
+          showActionToast(`Failed to set user account type: ${error.message}`, true);
+        }
+      });
+
+      document.getElementById('lookupUserAccountTypeBtn').addEventListener('click', async () => {
+        const token = getToken();
+        const userId = document.getElementById('userAccountTypeLookupUserId').value.trim();
+        if (!userId) {
+          log('User ID is required to look up an account type.', true);
+          return;
+        }
+        try {
+          const response = await fetchJson(`/admin/user-account-types?userId=${encodeURIComponent(userId)}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          log(`Fetched account type for ${response.userId}: ${response.accountType}`);
+          renderJsonResult('userAccountTypeLookupResult', response);
+        } catch (error) {
+          log(`Failed to lookup user account type: ${error.message}`, true);
+          showActionToast(`Failed to lookup user account type: ${error.message}`, true);
+        }
+      });
+
+      document.getElementById('registerAssetBtn').addEventListener('click', async () => {
+        const token = getToken();
+        const videoPath = document.getElementById('videoPath').value.trim();
+        const keyHex = document.getElementById('keyHex').value.trim();
+        const keyBase64 = document.getElementById('keyBase64').value.trim();
+        const keyVersion = Number(document.getElementById('keyVersion').value) || 1;
+        if (!videoPath || !keyHex || !keyBase64) {
+          log('videoPath, keyHex, and keyBase64 are required.', true);
+          return;
+        }
+        try {
+          await fetchJson('/admin/video-assets', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ videoPath, keyHex, keyBase64, keyVersion }),
+          });
+          log(`Registered asset for ${videoPath}`);
+          showActionToast(`Registered asset for ${videoPath}`);
+        } catch (error) {
+          log(`Failed to register asset: ${error.message}`, true);
+          showActionToast(`Failed to register asset: ${error.message}`, true);
+        }
+      });
+
+      document.getElementById('deleteAssetBtn').addEventListener('click', async () => {
+        const token = getToken();
+        const videoPath = document.getElementById('deleteVideoPath').value.trim();
+        if (!videoPath) {
+          log('videoPath is required to delete.', true);
+          return;
+        }
+        try {
+          await fetchJson(`/admin/video-assets?videoPath=${encodeURIComponent(videoPath)}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          log(`Deleted asset for ${videoPath}`);
+          showActionToast(`Deleted asset for ${videoPath}`);
+        } catch (error) {
+          if (error.status === 404) {
+            const message = `Asset ${videoPath} was not found in the database.`;
+            log(message);
+            showActionToast(message);
+            return;
+          }
+          log(`Failed to delete asset: ${error.message}`, true);
+          showActionToast(`Failed to delete asset: ${error.message}`, true);
+        }
+      });
+
+      document.getElementById('upsertLicenseBtn').addEventListener('click', async () => {
+        const token = getToken();
+        const userId = document.getElementById('licenseUserId').value.trim();
+        const videoPath = document.getElementById('licenseVideoPath').value.trim();
+        const status = document.getElementById('licenseStatus').value;
+        const expiresAt = document.getElementById('licenseExpiry').value.trim();
+
+        if (!userId || !videoPath) {
+          log('userId and videoPath are required to upsert a license.', true);
+          return;
+        }
+        try {
+          await fetchJson('/admin/video-licenses', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              userId,
+              videoPath,
+              status,
+              expiresAt: expiresAt || null,
+            }),
+          });
+          log(`Upserted license for user ${userId} / ${videoPath}`);
+          showActionToast(`Saved license for ${userId}`);
+        } catch (error) {
+          log(`Failed to upsert license: ${error.message}`, true);
+          showActionToast(`Failed to save license: ${error.message}`, true);
+        }
+      });
+
+      document.getElementById('deleteLicenseBtn').addEventListener('click', async () => {
+        const token = getToken();
+        const userId = document.getElementById('deleteLicenseUser').value.trim();
+        const videoPath = document.getElementById('deleteLicenseVideo').value.trim();
+        if (!userId || !videoPath) {
+          log('userId and videoPath required to delete license.', true);
+          return;
+        }
+        try {
+          await fetchJson(`/admin/video-licenses?userId=${encodeURIComponent(userId)}&videoPath=${encodeURIComponent(videoPath)}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          log(`Deleted license for user ${userId} / ${videoPath}`);
+          showActionToast(`Deleted license for ${userId}`);
+        } catch (error) {
+          log(`Failed to delete license: ${error.message}`, true);
+          showActionToast(`Failed to delete license: ${error.message}`, true);
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -18,7 +18,8 @@ public class SecurityConfig {
     public FirebaseAuthFilter firebaseAuthFilter(FirebaseAuth firebaseAuth) { return new FirebaseAuthFilter(firebaseAuth); }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, FirebaseAuthFilter filter) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http,
+                                           FirebaseAuthFilter filter) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> {}) // enable CORS with the bean below
@@ -29,7 +30,8 @@ public class SecurityConfig {
                                 "/health",
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
-                                "/v3/api-docs/**"
+                                "/v3/api-docs/**",
+                                "/admin-console/**"
                         ).permitAll()
 
                         // add more public endpoints as needed
