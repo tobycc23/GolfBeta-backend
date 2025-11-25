@@ -22,10 +22,10 @@ public class UserVideoLicenseAdminService {
     public VideoLicenseAdminResponseDto upsert(VideoLicenseAdminRequestDto request) {
         String userId = request.userId().trim();
         String normalisedVideoId = VideoPathUtils.normalise(request.videoPath());
-        UserProfile profile = userProfileRepository.findById(userId)
+        UserProfile profile = userProfileRepository.findByFirebaseId(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + userId));
 
-        UserVideoLicense license = licenseRepository.findByUserProfileUserIdAndVideoId(userId, normalisedVideoId)
+        UserVideoLicense license = licenseRepository.findByUserProfileFirebaseIdAndVideoId(userId, normalisedVideoId)
                 .orElseGet(() -> {
                     UserVideoLicense entity = new UserVideoLicense();
                     entity.setUserProfile(profile);
@@ -45,14 +45,14 @@ public class UserVideoLicenseAdminService {
     @Transactional
     public void delete(String userId, String videoPath) {
         String normalisedVideoId = VideoPathUtils.normalise(videoPath);
-        licenseRepository.findByUserProfileUserIdAndVideoId(userId.trim(), normalisedVideoId)
+        licenseRepository.findByUserProfileFirebaseIdAndVideoId(userId.trim(), normalisedVideoId)
                 .ifPresent(licenseRepository::delete);
     }
 
     private static VideoLicenseAdminResponseDto mapResponse(UserVideoLicense license) {
         return new VideoLicenseAdminResponseDto(
                 license.getId(),
-                license.getUserProfile().getUserId(),
+                license.getUserProfile().getFirebaseId(),
                 license.getVideoId(),
                 license.getStatus(),
                 license.getExpiresAt(),

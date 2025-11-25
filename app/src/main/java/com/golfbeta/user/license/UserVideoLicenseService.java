@@ -48,7 +48,7 @@ public class UserVideoLicenseService {
                                                           String videoId,
                                                           boolean updateLastValidated) {
         Instant now = Instant.now();
-        return repository.findByUserProfileUserIdAndVideoId(userId, videoId)
+        return repository.findByUserProfileFirebaseIdAndVideoId(userId, videoId)
                 .map(license -> buildDecision(license, now, updateLastValidated))
                 .orElseGet(() -> deriveAccountTypeDecision(userId, videoId, now));
     }
@@ -111,7 +111,7 @@ public class UserVideoLicenseService {
     }
 
     private boolean accountTypeAllowsVideo(String userId, String videoId) {
-        return userAccountTypeRepository.findByUserProfileUserId(userId)
+        return userAccountTypeRepository.findByUserProfileFirebaseId(userId)
                 .map(UserAccountType::getAccountType)
                 .map(accountType -> doesAccountTypeAllowVideo(accountType, videoId))
                 .orElse(false);

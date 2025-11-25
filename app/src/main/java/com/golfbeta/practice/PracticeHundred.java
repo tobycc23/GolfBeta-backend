@@ -17,8 +17,8 @@ public class PracticeHundred {
     @Column(columnDefinition = "uuid")
     private UUID id;
 
-    @Column(name = "user_id", nullable = false)
-    private String userId;
+    @Column(name = "user_id", nullable = false, columnDefinition = "uuid")
+    private UUID userId;
 
     @Column(name = "started_at", nullable = false)
     private LocalDateTime startedAt;

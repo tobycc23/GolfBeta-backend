@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
@@ -25,13 +24,15 @@ public class UserProfileService {
 
 
     public UserProfileViewDto getView(String uid) {
-        var p = repo.findById(uid).orElseThrow(() -> new NoSuchElementException("Profile not found"));
+        var p = repo.findByFirebaseId(uid)
+                .orElseGet(() -> repo.save(seed(uid, null)));
+        ensureAccountType(p);
         var status = computeStatus(p);
         return toView(p, status);
     }
 
     public UserProfileViewDto patch(String uid, UserProfilePatchDto dto) {
-        var p = repo.findById(uid).orElseGet(() -> seed(uid, null));
+        var p = repo.findByFirebaseId(uid).orElseGet(() -> seed(uid, null));
 
         if(dto.name() != null) {
             p.setName(dto.name());
@@ -68,7 +69,7 @@ public class UserProfileService {
     }
 
     public UserProfileViewDto put(String uid, UserProfilePutDto dto) {
-        var p = repo.findById(uid).orElseGet(() -> seed(uid, dto.email()));
+        var p = repo.findByFirebaseId(uid).orElseGet(() -> seed(uid, dto.email()));
 
         p.setEmail(dto.email());
         p.setName(dto.name());
@@ -92,14 +93,13 @@ public class UserProfileService {
     }
 
     public void deleteProfile(String uid) {
-        // GDPR: hard delete (simplest). Alternatively soft-delete/anonymize.
-        repo.deleteById(uid);
+        repo.findByFirebaseId(uid).ifPresent(repo::delete);
     }
 
     // ----- helpers -----
     private UserProfile seed(String uid, String email) {
         var np = new UserProfile();
-        np.setUserId(uid);
+        np.setFirebaseId(uid);
         if(email != null) np.setEmail(email);
         np.setCreatedAt(Instant.now());
         np.setUpdatedAt(Instant.now());
@@ -124,7 +124,7 @@ public class UserProfileService {
 
     private UserProfileViewDto toView(UserProfile p, UserProfileStatusDto status) {
         return new UserProfileViewDto(
-                p.getUserId(), p.getEmail(), p.getName(), p.getDob(), p.getUsername(),
+                p.getFirebaseId(), p.getEmail(), p.getName(), p.getDob(), p.getUsername(),
                 p.getGolfHandicap(), p.getBreakNumberTarget(), p.getSkillLevel(),
                 ImprovementAreas.filterNamesToEnums(p.getImprovementAreas()), p.getFavouriteColour(),
                 p.getCreatedAt(), p.getUpdatedAt(), p.getProfileCompletedAt(),
@@ -134,11 +134,11 @@ public class UserProfileService {
     }
 
     private void ensureAccountType(UserProfile profile) {
-        if (profile.getUserId() == null) {
+        if (profile.getFirebaseId() == null) {
             return;
         }
 
-        if (userAccountTypes.existsByUserProfileUserId(profile.getUserId())) {
+        if (userAccountTypes.existsByUserProfileFirebaseId(profile.getFirebaseId())) {
             return;
         }
 

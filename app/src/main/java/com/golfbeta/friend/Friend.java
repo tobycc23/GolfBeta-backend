@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @Entity
 @Table(
@@ -20,14 +21,14 @@ public class Friend {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name="user_id_a", nullable=false)
-    private String userIdA;
+    @Column(name="user_id_a", nullable=false, columnDefinition = "uuid")
+    private UUID userIdA;
 
-    @Column(name="user_id_b", nullable=false)
-    private String userIdB;
+    @Column(name="user_id_b", nullable=false, columnDefinition = "uuid")
+    private UUID userIdB;
 
-    @Column(name="requester_id", nullable=false)
-    private String requesterId;
+    @Column(name="requester_id", nullable=false, columnDefinition = "uuid")
+    private UUID requesterId;
 
     @Enumerated(EnumType.STRING)
     @Column(name="status", nullable=false)
@@ -39,13 +40,13 @@ public class Friend {
     @Column(name="updated_at", nullable=false)
     private Instant updatedAt = Instant.now();
 
-    public String otherOf(String uid) {
+    public UUID otherOf(UUID uid) {
         if (uid.equals(userIdA)) return userIdB;
         if (uid.equals(userIdB)) return userIdA;
         throw new IllegalArgumentException("User is not part of this friendship");
     }
 
-    public boolean involves(String uid) {
+    public boolean involves(UUID uid) {
         return uid.equals(userIdA) || uid.equals(userIdB);
     }
 }

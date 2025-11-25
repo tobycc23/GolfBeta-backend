@@ -23,7 +23,7 @@ public class UserAccountTypeAdminService {
         String userId = request.userId().trim();
         String desiredAccountType = normaliseAccountType(request.accountType());
 
-        UserProfile profile = userProfileRepository.findById(userId)
+        UserProfile profile = userProfileRepository.findByFirebaseId(userId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "User profile not found: " + userId));
 
@@ -31,7 +31,7 @@ public class UserAccountTypeAdminService {
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Account type not found: " + desiredAccountType));
 
-        UserAccountType userAccountType = userAccountTypeRepository.findByUserProfileUserId(userId)
+        UserAccountType userAccountType = userAccountTypeRepository.findByUserProfileFirebaseId(userId)
                 .orElseGet(() -> {
                     UserAccountType entity = new UserAccountType();
                     entity.setUserProfile(profile);
@@ -49,7 +49,7 @@ public class UserAccountTypeAdminService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId is required");
         }
 
-        AccountType accountType = userAccountTypeRepository.findByUserProfileUserId(trimmed)
+        AccountType accountType = userAccountTypeRepository.findByUserProfileFirebaseId(trimmed)
                 .map(UserAccountType::getAccountType)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "No account type assignment for userId: " + trimmed));

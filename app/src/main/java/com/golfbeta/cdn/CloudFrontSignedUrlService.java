@@ -65,7 +65,6 @@ public class CloudFrontSignedUrlService {
         this.distributionDomain = distributionDomain.trim();
         this.keyPairId = keyPairId.trim();
         this.privateKey = parsePrivateKey(this.rawPrivateKey);
-        log.info("Initialised CloudFront signed URL service targeting {}", this.distributionDomain);
     }
 
     public String generateSignedUrl(String objectKey, Duration lifetime) {
@@ -79,7 +78,6 @@ public class CloudFrontSignedUrlService {
         String normalisedKey = objectKey.startsWith("/") ? objectKey.substring(1) : objectKey;
         String resourceUrl = "https://" + distributionDomain + "/" + normalisedKey;
         Instant expiresAt = Instant.now().plus(lifetime);
-        log.info("Signing {} with key pair {} expiring at {}", resourceUrl, keyPairId, expiresAt);
 
         SignedUrl signedUrl = utilities.getSignedUrlWithCannedPolicy(builder -> builder
                 .resourceUrl(resourceUrl)
@@ -121,7 +119,6 @@ public class CloudFrontSignedUrlService {
         values.put("CloudFront-Policy", cookies.policyHeaderValue());
         values.put("CloudFront-Signature", cookies.signatureHeaderValue());
         values.put("CloudFront-Key-Pair-Id", cookies.keyPairIdHeaderValue());
-        log.info("Generated signed cookies for {} expiring at {}", resourceUrl, expiresAt);
         return values;
     }
 

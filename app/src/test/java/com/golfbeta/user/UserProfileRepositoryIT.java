@@ -1,8 +1,10 @@
 package com.golfbeta.user;
 
+import com.golfbeta.cdn.CloudFrontSignedUrlService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -35,10 +37,13 @@ class UserProfileRepositoryIT {
 
     @Autowired UserProfileRepository repo;
 
+    @MockBean
+    CloudFrontSignedUrlService cloudFrontSignedUrlService;
+
     @Test
     void can_insert_and_read_profile() {
         var p = new UserProfile();
-        p.setUserId("uid-123");
+        p.setFirebaseId("uid-123");
         p.setEmail("user@example.com");
         p.setFavouriteColour("teal");
         p.setCreatedAt(Instant.now());
@@ -46,7 +51,7 @@ class UserProfileRepositoryIT {
 
         repo.save(p);
 
-        var fetched = repo.findById("uid-123").orElseThrow();
+        var fetched = repo.findByFirebaseId("uid-123").orElseThrow();
         assertThat(fetched.getFavouriteColour()).isEqualTo("teal");
     }
 }

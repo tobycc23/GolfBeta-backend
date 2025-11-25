@@ -6,6 +6,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface UserAccountTypeRepository extends JpaRepository<UserAccountType, UUID> {
-    Optional<UserAccountType> findByUserProfileUserId(String userId);
-    boolean existsByUserProfileUserId(String userId);
+    Optional<UserAccountType> findByUserProfileFirebaseId(String firebaseId);
+    boolean existsByUserProfileFirebaseId(String firebaseId);
 }

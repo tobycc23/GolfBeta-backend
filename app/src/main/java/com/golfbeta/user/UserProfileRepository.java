@@ -6,14 +6,16 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
-public interface UserProfileRepository extends JpaRepository<UserProfile, String> {
+public interface UserProfileRepository extends JpaRepository<UserProfile, UUID> {
     Optional<UserProfile> findByEmail(String email);
+    Optional<UserProfile> findByFirebaseId(String firebaseId);
 
     @Query(value = """
-        SELECT user_id, name, username
+        SELECT firebase_id, name, username
         FROM user_profile
-        WHERE user_id <> :excludeUid
+        WHERE firebase_id <> :excludeUid
           AND name IS NOT NULL
           AND (
                name ILIKE CONCAT('%', :q, '%')
@@ -28,7 +30,7 @@ public interface UserProfileRepository extends JpaRepository<UserProfile, String
                                      @Param("limit") int limit);
 
     @Query(value = """
-        SELECT user_id, email, name
+        SELECT firebase_id, email, name
         FROM user_profile
         WHERE name IS NOT NULL
           AND (

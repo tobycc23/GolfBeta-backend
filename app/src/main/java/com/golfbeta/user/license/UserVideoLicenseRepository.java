@@ -7,5 +7,5 @@ import java.util.UUID;
 
 public interface UserVideoLicenseRepository extends JpaRepository<UserVideoLicense, UUID> {
 
-    Optional<UserVideoLicense> findByUserProfileUserIdAndVideoId(String userId, String videoId);
+    Optional<UserVideoLicense> findByUserProfileFirebaseIdAndVideoId(String firebaseId, String videoId);
 }

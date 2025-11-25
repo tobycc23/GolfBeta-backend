@@ -8,9 +8,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface PracticeHundredRepository extends JpaRepository<PracticeHundred, UUID> {
-    Optional<PracticeHundred> findByIdAndUserId(UUID id, String userId);
-    List<PracticeHundred> findAllByUserIdOrderByStartedAtDesc(String userId);
-    Optional<PracticeHundred> findFirstByUserIdAndCompletedAtIsNullOrderByStartedAtAsc(String userId);
-    Optional<PracticeHundred> findFirstByUserIdAndCompletedAtIsNotNullOrderByCompletedAtDesc(String userId);
-    List<PracticeHundred> findByUserIdAndCompletedAtIsNotNull(String userId, Pageable pageable);
+    Optional<PracticeHundred> findByIdAndUserId(UUID id, UUID userId);
+    List<PracticeHundred> findAllByUserIdOrderByStartedAtDesc(UUID userId);
+    Optional<PracticeHundred> findFirstByUserIdAndCompletedAtIsNullOrderByStartedAtAsc(UUID userId);
+    Optional<PracticeHundred> findFirstByUserIdAndCompletedAtIsNotNullOrderByCompletedAtDesc(UUID userId);
+    List<PracticeHundred> findByUserIdAndCompletedAtIsNotNull(UUID userId, Pageable pageable);
 }

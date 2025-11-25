@@ -4,6 +4,8 @@ import com.golfbeta.practice.dto.PracticeHundredAnalysisResponseDto;
 import com.golfbeta.practice.dto.PracticeHundredPatchDto;
 import com.golfbeta.practice.dto.PracticeHundredResponseDto;
 import com.golfbeta.practice.dto.PracticeHundredStatusDto;
+import com.golfbeta.user.UserProfile;
+import com.golfbeta.user.UserProfileRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -24,27 +26,31 @@ import java.util.regex.Pattern;
 public class PracticeHundredService {
 
     private final PracticeHundredRepository repository;
+    private final UserProfileRepository userProfiles;
 
-    public PracticeHundredResponseDto create(String userId) {
+    public PracticeHundredResponseDto create(String firebaseId) {
+        var profile = requireProfile(firebaseId);
         var practiceHundred = new PracticeHundred();
         practiceHundred.setId(UUID.randomUUID());
-        practiceHundred.setUserId(userId);
+        practiceHundred.setUserId(profile.getId());
         practiceHundred.setStartedAt(nowTruncatedToSeconds());
 
-        return toDto(repository.save(practiceHundred));
+        return toDto(repository.save(practiceHundred), profile.getFirebaseId());
     }
 
-    public PracticeHundredResponseDto patch(String userId, UUID id, PracticeHundredPatchDto dto) {
-        var practiceHundred = repository.findByIdAndUserId(id, userId)
+    public PracticeHundredResponseDto patch(String firebaseId, UUID id, PracticeHundredPatchDto dto) {
+        var profile = requireProfile(firebaseId);
+        var practiceHundred = repository.findByIdAndUserId(id, profile.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Practice hundred not found"));
 
         applyPatch(practiceHundred, dto);
 
-        return toDto(repository.save(practiceHundred));
+        return toDto(repository.save(practiceHundred), profile.getFirebaseId());
     }
 
-    public PracticeHundredResponseDto complete(String userId, UUID id, PracticeHundredPatchDto dto) {
-        var practiceHundred = repository.findByIdAndUserId(id, userId)
+    public PracticeHundredResponseDto complete(String firebaseId, UUID id, PracticeHundredPatchDto dto) {
+        var profile = requireProfile(firebaseId);
+        var practiceHundred = repository.findByIdAndUserId(id, profile.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Practice hundred not found"));
 
         if (dto != null) {
@@ -53,17 +59,19 @@ public class PracticeHundredService {
 
         practiceHundred.setCompletedAt(nowTruncatedToSeconds());
 
-        return toDto(repository.save(practiceHundred));
+        return toDto(repository.save(practiceHundred), profile.getFirebaseId());
     }
 
-    public PracticeHundredStatusDto latestCompleted(String userId) {
-        return repository.findFirstByUserIdAndCompletedAtIsNotNullOrderByCompletedAtDesc(userId)
+    public PracticeHundredStatusDto latestCompleted(String firebaseId) {
+        var profile = requireProfile(firebaseId);
+        return repository.findFirstByUserIdAndCompletedAtIsNotNullOrderByCompletedAtDesc(profile.getId())
                 .map(ph -> new PracticeHundredStatusDto(ph.getId(), ph.getCompletedAt()))
                 .orElse(new PracticeHundredStatusDto(null, null));
     }
 
-    public PracticeHundredAnalysisResponseDto analysis(String userId) {
-        var practiceHundred = repository.findFirstByUserIdAndCompletedAtIsNotNullOrderByCompletedAtDesc(userId)
+    public PracticeHundredAnalysisResponseDto analysis(String firebaseId) {
+        var profile = requireProfile(firebaseId);
+        var practiceHundred = repository.findFirstByUserIdAndCompletedAtIsNotNullOrderByCompletedAtDesc(profile.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No completed practice hundred found"));
 
         var drivingTotal = parseSingleScore(practiceHundred.getDrivingStraight())
@@ -116,36 +124,41 @@ public class PracticeHundredService {
         );
     }
 
-    public List<PracticeHundredResponseDto> list(String userId) {
-        return repository.findAllByUserIdOrderByStartedAtDesc(userId)
+    public List<PracticeHundredResponseDto> list(String firebaseId) {
+        var profile = requireProfile(firebaseId);
+        return repository.findAllByUserIdOrderByStartedAtDesc(profile.getId())
                 .stream()
-                .map(this::toDto)
+                .map(ph -> toDto(ph, profile.getFirebaseId()))
                 .toList();
     }
 
-    public List<PracticeHundredResponseDto> history(String userId, int limit) {
+    public List<PracticeHundredResponseDto> history(String firebaseId, int limit) {
+        var profile = requireProfile(firebaseId);
         int sanitizedLimit = limit <= 0 ? 20 : Math.min(limit, 50);
         Pageable pageable = PageRequest.of(0, sanitizedLimit, Sort.by(Sort.Direction.DESC, "completedAt"));
-        return repository.findByUserIdAndCompletedAtIsNotNull(userId, pageable)
+        return repository.findByUserIdAndCompletedAtIsNotNull(profile.getId(), pageable)
                 .stream()
-                .map(this::toDto)
+                .map(ph -> toDto(ph, profile.getFirebaseId()))
                 .toList();
     }
 
-    public PracticeHundredResponseDto findById(String userId, UUID id) {
-        return repository.findByIdAndUserId(id, userId)
-                .map(this::toDto)
+    public PracticeHundredResponseDto findById(String firebaseId, UUID id) {
+        var profile = requireProfile(firebaseId);
+        return repository.findByIdAndUserId(id, profile.getId())
+                .map(ph -> toDto(ph, profile.getFirebaseId()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Practice hundred not found"));
     }
 
-    public PracticeHundredResponseDto findIncomplete(String userId) {
-        return repository.findFirstByUserIdAndCompletedAtIsNullOrderByStartedAtAsc(userId)
-                .map(this::toDto)
+    public PracticeHundredResponseDto findIncomplete(String firebaseId) {
+        var profile = requireProfile(firebaseId);
+        return repository.findFirstByUserIdAndCompletedAtIsNullOrderByStartedAtAsc(profile.getId())
+                .map(ph -> toDto(ph, profile.getFirebaseId()))
                 .orElse(null);
     }
 
-    public void deleteIncomplete(String userId, UUID id) {
-        var practiceHundred = repository.findByIdAndUserId(id, userId)
+    public void deleteIncomplete(String firebaseId, UUID id) {
+        var profile = requireProfile(firebaseId);
+        var practiceHundred = repository.findByIdAndUserId(id, profile.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Practice hundred not found"));
 
         if (practiceHundred.getCompletedAt() != null) {
@@ -184,10 +197,10 @@ public class PracticeHundredService {
         return LocalDateTime.now().withNano(0);
     }
 
-    private PracticeHundredResponseDto toDto(PracticeHundred practiceHundred) {
+    private PracticeHundredResponseDto toDto(PracticeHundred practiceHundred, String firebaseId) {
         return new PracticeHundredResponseDto(
                 practiceHundred.getId(),
-                practiceHundred.getUserId(),
+                firebaseId,
                 practiceHundred.getStartedAt(),
                 practiceHundred.getCompletedAt(),
                 practiceHundred.getPutting3ft(),
@@ -211,6 +224,11 @@ public class PracticeHundredService {
                 practiceHundred.getDrivingDraw(),
                 practiceHundred.getDrivingFade()
         );
+    }
+
+    private UserProfile requireProfile(String firebaseId) {
+        return userProfiles.findByFirebaseId(firebaseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Profile not found"));
     }
 
     private int parseSingleScore(String value) {

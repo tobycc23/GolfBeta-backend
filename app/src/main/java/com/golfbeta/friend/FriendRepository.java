@@ -7,75 +7,76 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public interface FriendRepository extends JpaRepository<Friend, Long> {
 
-    Optional<Friend> findByUserIdAAndUserIdB(String a, String b);
+    Optional<Friend> findByUserIdAAndUserIdB(UUID a, UUID b);
 
     @Query("""
            select f from Friend f
            where (f.userIdA = :uid or f.userIdB = :uid) and f.status = :status
            order by f.createdAt desc
            """)
-    List<Friend> findAllByUidAndStatus(String uid, FriendStatus status);
+    List<Friend> findAllByUidAndStatus(UUID uid, FriendStatus status);
 
     @Query("""
            select f from Friend f
            where (f.userIdA = :uid or f.userIdB = :uid)
            order by f.createdAt desc
            """)
-    List<Friend> findAllByUid(String uid);
+    List<Friend> findAllByUid(UUID uid);
 
     @Query(value = """
         SELECT
-          CASE WHEN f.user_id_a = :uid THEN f.user_id_b ELSE f.user_id_a END AS other_user_id,
-          up.name       AS other_name,
-          up.username   AS other_username,
-          f.status      AS status,
+          other.firebase_id AS other_user_id,
+          other.name        AS other_name,
+          other.username    AS other_username,
+          f.status          AS status,
           (f.requester_id = :uid) AS requested_by_me,
-          f.created_at  AS since
+          f.created_at      AS since
         FROM friends f
-        JOIN user_profile up
-          ON up.user_id = CASE WHEN f.user_id_a = :uid THEN f.user_id_b ELSE f.user_id_a END
+        JOIN user_profile other
+          ON other.id = CASE WHEN f.user_id_a = :uid THEN f.user_id_b ELSE f.user_id_a END
         WHERE (f.user_id_a = :uid OR f.user_id_b = :uid)
           AND f.status = 'FRIENDS'
-        ORDER BY COALESCE(up.name, '') ASC, f.created_at DESC
+        ORDER BY COALESCE(other.name, '') ASC, f.created_at DESC
         """, nativeQuery = true)
-    List<Object[]> findFriendsForList(@Param("uid") String uid);
+    List<Object[]> findFriendsForList(@Param("uid") UUID uid);
 
     @Query(value = """
         SELECT
-          CASE WHEN f.user_id_a = :uid THEN f.user_id_b ELSE f.user_id_a END AS other_user_id,
-          up.name       AS other_name,
-          up.username   AS other_username,
-          f.status      AS status,
+          other.firebase_id AS other_user_id,
+          other.name        AS other_name,
+          other.username    AS other_username,
+          f.status          AS status,
           (f.requester_id = :uid) AS requested_by_me,
-          f.created_at  AS since
+          f.created_at      AS since
         FROM friends f
-        JOIN user_profile up
-          ON up.user_id = CASE WHEN f.user_id_a = :uid THEN f.user_id_b ELSE f.user_id_a END
+        JOIN user_profile other
+          ON other.id = CASE WHEN f.user_id_a = :uid THEN f.user_id_b ELSE f.user_id_a END
         WHERE (f.user_id_a = :uid OR f.user_id_b = :uid)
           AND f.status = 'REQUESTED'
           AND f.requester_id <> :uid   -- inbound requests only
         ORDER BY f.created_at DESC
         """, nativeQuery = true)
-    List<Object[]> findIncomingForList(@Param("uid") String uid);
+    List<Object[]> findIncomingForList(@Param("uid") UUID uid);
 
     @Query(value = """
         SELECT
-          CASE WHEN f.user_id_a = :uid THEN f.user_id_b ELSE f.user_id_a END AS other_user_id,
-          up.name       AS other_name,
-          up.username   AS other_username,
-          f.status      AS status,
+          other.firebase_id AS other_user_id,
+          other.name        AS other_name,
+          other.username    AS other_username,
+          f.status          AS status,
           (f.requester_id = :uid) AS requested_by_me,
-          f.created_at  AS since
+          f.created_at      AS since
         FROM friends f
-        JOIN user_profile up
-          ON up.user_id = CASE WHEN f.user_id_a = :uid THEN f.user_id_b ELSE f.user_id_a END
+        JOIN user_profile other
+          ON other.id = CASE WHEN f.user_id_a = :uid THEN f.user_id_b ELSE f.user_id_a END
         WHERE (f.user_id_a = :uid OR f.user_id_b = :uid)
           AND f.status = 'REQUESTED'
           AND f.requester_id = :uid     -- outgoing requests (useful for annotating search results)
         ORDER BY f.created_at DESC
         """, nativeQuery = true)
-    List<Object[]> findOutgoingForList(@Param("uid") String uid);
+    List<Object[]> findOutgoingForList(@Param("uid") UUID uid);
 }
