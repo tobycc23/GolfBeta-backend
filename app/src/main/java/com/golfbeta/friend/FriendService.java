@@ -1,6 +1,6 @@
 package com.golfbeta.friend;
 
-import com.golfbeta.enums.FriendStatus;
+import com.golfbeta.friend.enums.FriendStatus;
 import com.golfbeta.friend.dto.FriendListItemDto;
 import com.golfbeta.friend.dto.FriendViewDto;
 import com.golfbeta.user.UserProfile;

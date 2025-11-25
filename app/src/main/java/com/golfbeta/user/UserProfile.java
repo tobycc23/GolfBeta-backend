@@ -1,7 +1,5 @@
 package com.golfbeta.user;
 
-import com.golfbeta.converter.ImprovementAreasConverter;
-import com.golfbeta.enums.ImprovementAreas;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.JdbcTypeCode;

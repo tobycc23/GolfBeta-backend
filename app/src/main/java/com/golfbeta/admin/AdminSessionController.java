@@ -1,6 +1,6 @@
 package com.golfbeta.admin;
 
-import com.golfbeta.auth.AdminAuthorization;
+import com.golfbeta.admin.audit.AdminAuditLogService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

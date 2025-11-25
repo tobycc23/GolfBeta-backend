@@ -1,6 +1,6 @@
 package com.golfbeta.friend.dto;
 
-import com.golfbeta.enums.FriendStatus;
+import com.golfbeta.friend.enums.FriendStatus;
 import java.time.Instant;
 
 public record FriendListItemDto(

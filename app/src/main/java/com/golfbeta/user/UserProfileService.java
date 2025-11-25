@@ -1,7 +1,11 @@
 package com.golfbeta.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.golfbeta.enums.ImprovementAreas;
+import com.golfbeta.account.AccountType;
+import com.golfbeta.account.AccountTypeRepository;
+import com.golfbeta.account.UserAccountType;
+import com.golfbeta.account.UserAccountTypeRepository;
+import com.golfbeta.shared.enums.ImprovementAreas;
 import com.golfbeta.user.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;

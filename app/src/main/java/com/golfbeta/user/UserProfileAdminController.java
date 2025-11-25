@@ -1,7 +1,7 @@
 package com.golfbeta.user;
 
-import com.golfbeta.admin.AdminAuditLogService;
-import com.golfbeta.auth.AdminAuthorization;
+import com.golfbeta.admin.audit.AdminAuditLogService;
+import com.golfbeta.admin.AdminAuthorization;
 import com.golfbeta.user.dto.UserProfileSummaryDto;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;

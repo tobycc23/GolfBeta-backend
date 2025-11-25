@@ -1,6 +1,5 @@
 package com.golfbeta.config;
 
-import com.golfbeta.auth.FirebaseAuthFilter;
 import com.google.firebase.auth.FirebaseAuth;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -1,7 +1,7 @@
 // src/main/java/com/golfbeta/user/dto/ProfileViewDto.java
 package com.golfbeta.user.dto;
 
-import com.golfbeta.enums.ImprovementAreas;
+import com.golfbeta.shared.enums.ImprovementAreas;
 
 import java.time.LocalDate;
 import java.time.Instant;

@@ -1,6 +1,6 @@
 package com.golfbeta.user;
 
-import com.golfbeta.cdn.CloudFrontSignedUrlService;
+import com.golfbeta.aws.CloudFrontSignedUrlService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

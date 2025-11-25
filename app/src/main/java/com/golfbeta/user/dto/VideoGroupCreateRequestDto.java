@@ -1,7 +1,0 @@
-package com.golfbeta.user.dto;
-
-import jakarta.validation.constraints.NotBlank;
-
-public record VideoGroupCreateRequestDto(
-        @NotBlank String name
-) {}

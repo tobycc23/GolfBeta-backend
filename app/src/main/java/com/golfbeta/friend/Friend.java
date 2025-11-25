@@ -1,6 +1,6 @@
 package com.golfbeta.friend;
 
-import com.golfbeta.enums.FriendStatus;
+import com.golfbeta.friend.enums.FriendStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
